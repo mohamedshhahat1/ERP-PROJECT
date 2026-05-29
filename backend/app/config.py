@@ -1,4 +1,10 @@
+import secrets
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
+
+# Secrets that must never be used in production
+_UNSAFE_SECRET_VALUES = {"change-me", "change-this-to-a-random-secret-key", "secret", ""}
 
 
 class Settings(BaseSettings):
@@ -6,7 +12,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/1"
-    secret_key: str = "change-me"
+    secret_key: str = ""
     access_token_expire_minutes: int = 480
     anthropic_api_key: str = ""
     ai_model: str = "claude-sonnet-4-20250514"
@@ -38,6 +44,19 @@ class Settings(BaseSettings):
     whatsapp_can_send: bool = False
     whatsapp_can_bulk_message: bool = False
     whatsapp_max_messages_per_request: int = 50
+
+    @field_validator("secret_key", mode="before")
+    @classmethod
+    def validate_secret_key(cls, v: str) -> str:
+        if v in _UNSAFE_SECRET_VALUES or len(v) < 32:
+            import warnings
+            warnings.warn(
+                "SECRET_KEY is missing or insecure. Generating a random key for this session. "
+                "Set a strong SECRET_KEY (≥32 chars) in your .env file for production.",
+                stacklevel=2,
+            )
+            return secrets.token_urlsafe(64)
+        return v
 
     @property
     def cors_origins(self) -> list[str]:

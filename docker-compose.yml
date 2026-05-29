@@ -3,11 +3,11 @@ services:
     image: pgvector/pgvector:pg16
     container_name: erp_postgres
     environment:
-      POSTGRES_DB: ceramic_erp
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: ${POSTGRES_DB:-ceramic_erp}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
@@ -21,10 +21,13 @@ services:
   redis:
     image: redis:7-alpine
     container_name: erp_redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_secret}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_secret}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -36,17 +39,19 @@ services:
     container_name: erp_backend
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql://postgres:postgres123@db:5432/ceramic_erp
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      SECRET_KEY: change-this-to-a-random-secret-key
-      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-ceramic_erp}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secret}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis_secret}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis_secret}@redis:6379/1
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-480}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      AI_MODEL: claude-sonnet-4-20250514
-      DEBUG: "true"
-      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:8080
+      AI_MODEL: ${AI_MODEL:-claude-sonnet-4-20250514}
+      DEBUG: ${DEBUG:-false}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8080}
     depends_on:
       db:
         condition: service_healthy
@@ -59,14 +64,16 @@ services:
       context: ./backend
       dockerfile: Dockerfile.celery
     container_name: erp_celery
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql://postgres:postgres123@db:5432/ceramic_erp
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      SECRET_KEY: change-this-to-a-random-secret-key
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-ceramic_erp}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secret}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis_secret}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis_secret}@redis:6379/1
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      AI_MODEL: claude-sonnet-4-20250514
+      AI_MODEL: ${AI_MODEL:-claude-sonnet-4-20250514}
     depends_on:
       db:
         condition: service_healthy
@@ -76,3 +83,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
