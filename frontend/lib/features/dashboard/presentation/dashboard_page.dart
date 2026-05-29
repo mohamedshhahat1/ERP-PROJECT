@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/widgets/kpi_card.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/theme/app_theme.dart';
@@ -28,9 +29,9 @@ class DashboardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Dashboard', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+          Text('dashboard.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text('Welcome back. Here\'s your business overview.', style: TextStyle(color: AppColors.textSecondary)),
+          Text('dashboard.subtitle'.tr(), style: TextStyle(color: AppColors.textSecondary)),
           const SizedBox(height: 24),
 
           // KPI Cards
@@ -43,18 +44,18 @@ class DashboardPage extends ConsumerWidget {
                 children: List.generate(5, (_) => const CardSkeletonLoader()),
               );
             }),
-            error: (err, _) => Text('Error: $err'),
+            error: (err, _) => Text('${ 'common.error'.tr()}: $err'),
             data: (s) => LayoutBuilder(builder: (context, constraints) {
               final cols = constraints.maxWidth > 1000 ? 5 : constraints.maxWidth > 600 ? 3 : 2;
               return GridView.count(
                 crossAxisCount: cols, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1.6,
                 children: [
-                  KPICard(title: 'Today\'s Sales', value: 'EGP ${s.todaySales}', icon: Icons.trending_up, color: AppColors.success),
-                  KPICard(title: 'Monthly Profit', value: 'EGP ${s.monthlyProfit}', icon: Icons.bar_chart, color: AppColors.primary),
-                  KPICard(title: 'Low Stock', value: '${s.lowStockProducts}', icon: Icons.warning_rounded, color: AppColors.warning),
-                  KPICard(title: 'Pending Payments', value: '${s.pendingPayments}', icon: Icons.schedule, color: AppColors.error),
-                  KPICard(title: 'Cash Balance', value: 'EGP ${s.cashBalance}', icon: Icons.account_balance_wallet, color: AppColors.info),
+                  KPICard(title: 'dashboard.today_sales'.tr(), value: 'EGP ${s.todaySales}', icon: Icons.trending_up, color: AppColors.success),
+                  KPICard(title: 'dashboard.monthly_profit'.tr(), value: 'EGP ${s.monthlyProfit}', icon: Icons.bar_chart, color: AppColors.primary),
+                  KPICard(title: 'dashboard.low_stock'.tr(), value: '${s.lowStockProducts}', icon: Icons.warning_rounded, color: AppColors.warning),
+                  KPICard(title: 'dashboard.pending_payments'.tr(), value: '${s.pendingPayments}', icon: Icons.schedule, color: AppColors.error),
+                  KPICard(title: 'dashboard.cash_balance'.tr(), value: 'EGP ${s.cashBalance}', icon: Icons.account_balance_wallet, color: AppColors.info),
                 ],
               );
             }),

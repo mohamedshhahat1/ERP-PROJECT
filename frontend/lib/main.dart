@@ -2,26 +2,34 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
 
-  // Catch synchronous Flutter framework errors (layout, build, rendering)
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     debugPrint('Flutter error: ${details.exceptionAsString()}');
   };
 
-  // Catch asynchronous errors not handled by Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('Unhandled async error: $error\n$stack');
-    return true; // Prevents app crash in release mode
+    return true;
   };
 
-  runApp(const ProviderScope(child: CeramicERP()));
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      startLocale: const Locale('en'),
+      child: const ProviderScope(child: CeramicERP()),
+    ),
+  );
 }
 
 class CeramicERP extends ConsumerWidget {
@@ -33,12 +41,15 @@ class CeramicERP extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Ceramic ERP',
+      title: 'app.name'.tr(),
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       routerConfig: router,
+      locale: context.locale,
+      supportedLocales: context.supportedLocales,
+      localizationsDelegates: context.localizationDelegates,
       builder: (context, child) => ResponsiveBreakpoints.builder(
         child: child!,
         breakpoints: [

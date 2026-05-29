@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/auth/presentation/auth_provider.dart';
 import '../../features/notifications/presentation/notifications_provider.dart';
@@ -39,7 +40,7 @@ class AppShell extends ConsumerWidget {
                         decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
                         child: const Icon(Icons.diamond, color: Colors.white, size: 20),
                       ),
-                      if (!collapsed) ...[const SizedBox(width: 12), const Text('Ceramic ERP', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16))],
+                      if (!collapsed) ...[const SizedBox(width: 12), Text('app.name'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16))],
                     ],
                   ),
                 ),
@@ -48,27 +49,27 @@ class AppShell extends ConsumerWidget {
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     children: [
-                      _navItem(context, ref, '/', Icons.dashboard_rounded, 'Dashboard', collapsed),
-                      _navItem(context, ref, '/products', Icons.inventory_2_rounded, 'Products', collapsed),
-                      _navItem(context, ref, '/inventory', Icons.warehouse_rounded, 'Inventory', collapsed),
-                      _navItem(context, ref, '/sales', Icons.receipt_long_rounded, 'Sales', collapsed),
-                      _navItem(context, ref, '/purchases', Icons.shopping_cart_rounded, 'Purchases', collapsed),
-                      _navItem(context, ref, '/expenses', Icons.money_off_rounded, 'Expenses', collapsed),
-                      _navItem(context, ref, '/customers', Icons.people_rounded, 'Customers', collapsed),
-                      _navItem(context, ref, '/suppliers', Icons.local_shipping_rounded, 'Suppliers', collapsed),
-                      _navItem(context, ref, '/opening-balances', Icons.account_balance_wallet_rounded, 'Opening Balances', collapsed),
-                      _navItem(context, ref, '/reports', Icons.bar_chart_rounded, 'Reports', collapsed),
-                      _navItem(context, ref, '/notifications', Icons.notifications_rounded, 'Notifications', collapsed),
-                      _navItem(context, ref, '/whatsapp', Icons.chat, 'WhatsApp', collapsed, highlight: true),
+                      _navItem(context, ref, '/', Icons.dashboard_rounded, 'nav.dashboard'.tr(), collapsed),
+                      _navItem(context, ref, '/products', Icons.inventory_2_rounded, 'nav.products'.tr(), collapsed),
+                      _navItem(context, ref, '/inventory', Icons.warehouse_rounded, 'nav.inventory'.tr(), collapsed),
+                      _navItem(context, ref, '/sales', Icons.receipt_long_rounded, 'nav.sales'.tr(), collapsed),
+                      _navItem(context, ref, '/purchases', Icons.shopping_cart_rounded, 'nav.purchases'.tr(), collapsed),
+                      _navItem(context, ref, '/expenses', Icons.money_off_rounded, 'nav.expenses'.tr(), collapsed),
+                      _navItem(context, ref, '/customers', Icons.people_rounded, 'nav.customers'.tr(), collapsed),
+                      _navItem(context, ref, '/suppliers', Icons.local_shipping_rounded, 'nav.suppliers'.tr(), collapsed),
+                      _navItem(context, ref, '/opening-balances', Icons.account_balance_wallet_rounded, 'nav.opening_balances'.tr(), collapsed),
+                      _navItem(context, ref, '/reports', Icons.bar_chart_rounded, 'nav.reports'.tr(), collapsed),
+                      _navItem(context, ref, '/notifications', Icons.notifications_rounded, 'nav.notifications'.tr(), collapsed),
+                      _navItem(context, ref, '/whatsapp', Icons.chat, 'nav.whatsapp'.tr(), collapsed, highlight: true),
                       const Divider(height: 24),
-                      _navItem(context, ref, '/voice-ai', Icons.record_voice_over_rounded, 'Voice AI', collapsed, highlight: true),
-                      _navItem(context, ref, '/ai', Icons.smart_toy_rounded, 'AI Chat', collapsed),
+                      _navItem(context, ref, '/voice-ai', Icons.record_voice_over_rounded, 'nav.voice_ai'.tr(), collapsed, highlight: true),
+                      _navItem(context, ref, '/ai', Icons.smart_toy_rounded, 'nav.ai_chat'.tr(), collapsed),
                       if (userRole == 'admin') ...[                        const Divider(height: 24),
-                        _navItem(context, ref, '/ai-audit', Icons.admin_panel_settings_rounded, 'AI Audit', collapsed, highlight: true),
-                        _navItem(context, ref, '/ai-analytics', Icons.insights_rounded, 'AI Analytics', collapsed, highlight: true),
-                        _navItem(context, ref, '/accounting', Icons.menu_book_rounded, 'Accounting', collapsed),
-                        _navItem(context, ref, '/users', Icons.manage_accounts_rounded, 'Users', collapsed),
-                        _navItem(context, ref, '/settings', Icons.settings_rounded, 'Settings', collapsed),
+                        _navItem(context, ref, '/ai-audit', Icons.admin_panel_settings_rounded, 'nav.ai_audit'.tr(), collapsed, highlight: true),
+                        _navItem(context, ref, '/ai-analytics', Icons.insights_rounded, 'nav.ai_analytics'.tr(), collapsed, highlight: true),
+                        _navItem(context, ref, '/accounting', Icons.menu_book_rounded, 'nav.accounting'.tr(), collapsed),
+                        _navItem(context, ref, '/users', Icons.manage_accounts_rounded, 'nav.users'.tr(), collapsed),
+                        _navItem(context, ref, '/settings', Icons.settings_rounded, 'nav.settings'.tr(), collapsed),
                       ],
                     ],
                   ),
@@ -99,7 +100,7 @@ class AppShell extends ConsumerWidget {
                         width: 300,
                         child: TextField(
                           decoration: InputDecoration(
-                            hintText: 'Search...',
+                            hintText: 'common.search'.tr(),
                             prefixIcon: const Icon(Icons.search, size: 20),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                             filled: true,
@@ -109,14 +110,27 @@ class AppShell extends ConsumerWidget {
                         ),
                       ),
                       const Spacer(),
+                      // Language toggle button
+                      IconButton(
+                        onPressed: () {
+                          if (context.locale == const Locale('en')) {
+                            context.setLocale(const Locale('ar'));
+                          } else {
+                            context.setLocale(const Locale('en'));
+                          }
+                        },
+                        icon: const Icon(Icons.language),
+                        tooltip: 'settings.language'.tr(),
+                      ),
+                      const SizedBox(width: 4),
                       IconButton(
                         onPressed: () => context.go('/voice-ai'),
                         icon: const Icon(Icons.record_voice_over_rounded),
-                        tooltip: 'Voice AI',
+                        tooltip: 'nav.voice_ai'.tr(),
                         style: IconButton.styleFrom(foregroundColor: AppColors.primary),
                       ),
                       const SizedBox(width: 4),
-                      IconButton(onPressed: () => context.go('/ai'), icon: const Icon(Icons.smart_toy_rounded), tooltip: 'AI Assistant'),
+                      IconButton(onPressed: () => context.go('/ai'), icon: const Icon(Icons.smart_toy_rounded), tooltip: 'nav.ai_chat'.tr()),
                       const SizedBox(width: 8),
                       IconButton(
                         onPressed: () => context.go('/notifications'),
