@@ -5,13 +5,14 @@ from app.repositories.payment_repo import PaymentRepository
 from app.repositories.customer_repo import CustomerRepository
 from app.repositories.supplier_repo import SupplierRepository
 from app.repositories.sales_repo import SalesRepository
+from app.repositories.purchase_repo import PurchaseRepository
 from app.services.cash_service import CashService
 from app.services.ledger_service import LedgerService
 from app.core.validators import Validator
 from app.events.event_bus import Event, get_event_bus
 from app.events.payment_events import PAYMENT_RECEIVED, PAYMENT_MADE
 from app.schemas.payments import CustomerPaymentCreate, SupplierPaymentCreate
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import NotFoundError, ValidationError
 
 
 class PaymentService:
@@ -21,6 +22,7 @@ class PaymentService:
         self.customer_repo = CustomerRepository(db)
         self.supplier_repo = SupplierRepository(db)
         self.sales_repo = SalesRepository(db)
+        self.purchase_repo = PurchaseRepository(db)
         self.cash = CashService(db)
         self.ledger = LedgerService(db)
         self.validator = Validator(db)
@@ -33,6 +35,18 @@ class PaymentService:
             customer = self.customer_repo.get_by_id(data.customer_id)
             if not customer:
                 raise NotFoundError("Customer not found")
+
+            # Guard against overpayment: payment cannot exceed outstanding balance
+            if customer.current_balance <= 0:
+                raise ValidationError(
+                    f"Customer '{customer.customer_name}' has no outstanding balance. "
+                    f"Current balance: {customer.current_balance}"
+                )
+            if data.payment_amount > customer.current_balance:
+                raise ValidationError(
+                    f"Payment amount ({data.payment_amount}) exceeds outstanding balance "
+                    f"({customer.current_balance}) for customer '{customer.customer_name}'"
+                )
 
             payment = self.payment_repo.create_customer_payment(**data.model_dump())
             self.customer_repo.update_balance(customer, -data.payment_amount)
@@ -84,6 +98,18 @@ class PaymentService:
             if not supplier:
                 raise NotFoundError("Supplier not found")
 
+            # Guard against overpayment: payment cannot exceed outstanding balance
+            if supplier.current_balance <= 0:
+                raise ValidationError(
+                    f"Supplier '{supplier.supplier_name}' has no outstanding balance. "
+                    f"Current balance: {supplier.current_balance}"
+                )
+            if data.payment_amount > supplier.current_balance:
+                raise ValidationError(
+                    f"Payment amount ({data.payment_amount}) exceeds outstanding balance "
+                    f"({supplier.current_balance}) for supplier '{supplier.supplier_name}'"
+                )
+
             payment = self.payment_repo.create_supplier_payment(**data.model_dump())
             self.supplier_repo.update_balance(supplier, -data.payment_amount)
             self.supplier_repo.record_payment_date(supplier)
@@ -96,6 +122,26 @@ class PaymentService:
                 payment_id=payment.payment_id,
                 amount=data.payment_amount,
             )
+
+            # Update related purchase invoice payment status
+            if data.related_purchase_invoice_id:
+                purchase_invoice = self.purchase_repo.get_by_id(data.related_purchase_invoice_id)
+                if purchase_invoice:
+                    new_paid = Decimal(str(purchase_invoice.paid_amount or 0)) + Decimal(str(data.payment_amount))
+                    total = Decimal(str(purchase_invoice.total_amount or 0))
+                    new_remaining = max(total - new_paid, Decimal("0"))
+
+                    if new_remaining <= 0:
+                        status = "paid"
+                    elif new_paid > 0:
+                        status = "partial"
+                    else:
+                        status = "unpaid"
+
+                    purchase_invoice.paid_amount = new_paid
+                    purchase_invoice.remaining_amount = new_remaining
+                    purchase_invoice.payment_status = status
+                    self.db.flush()
 
         self.event_bus.publish(Event(
             event_type=PAYMENT_MADE,
