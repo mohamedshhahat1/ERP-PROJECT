@@ -481,6 +481,7 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
   final _ownerPhoneController = TextEditingController();
   bool _canSend = false;
   bool _canBulk = false;
+  bool _settingsInitialized = false;
   bool _saving = false;
   String? _status;
 
@@ -529,6 +530,12 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Text('Error loading settings: $e', style: const TextStyle(color: AppColors.error)),
             data: (settings) {
+              // Initialize toggle state from server settings on first load
+              if (!_settingsInitialized) {
+                _canSend = settings['can_send'] == true;
+                _canBulk = settings['can_bulk_message'] == true;
+                _settingsInitialized = true;
+              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -627,14 +634,14 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
                         SwitchListTile(
                           title: const Text('Enable Sending'),
                           subtitle: const Text('Allow sending WhatsApp messages'),
-                          value: _canSend || (settings['can_send'] == true),
+                          value: _canSend,
                           onChanged: (v) => setState(() => _canSend = v),
                           activeColor: const Color(0xFF25D366),
                         ),
                         SwitchListTile(
                           title: const Text('Enable Bulk Messaging'),
                           subtitle: const Text('Allow sending bulk overdue reminders'),
-                          value: _canBulk || (settings['can_bulk_message'] == true),
+                          value: _canBulk,
                           onChanged: (v) => setState(() => _canBulk = v),
                           activeColor: const Color(0xFF25D366),
                         ),

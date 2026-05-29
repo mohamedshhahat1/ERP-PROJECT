@@ -50,11 +50,11 @@ class DashboardPage extends ConsumerWidget {
                 crossAxisCount: cols, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1.6,
                 children: [
-                  KPICard(title: 'Today\'s Sales', value: '\$${s.todaySales}', icon: Icons.trending_up, color: AppColors.success),
-                  KPICard(title: 'Monthly Profit', value: '\$${s.monthlyProfit}', icon: Icons.bar_chart, color: AppColors.primary),
+                  KPICard(title: 'Today\'s Sales', value: 'EGP ${s.todaySales}', icon: Icons.trending_up, color: AppColors.success),
+                  KPICard(title: 'Monthly Profit', value: 'EGP ${s.monthlyProfit}', icon: Icons.bar_chart, color: AppColors.primary),
                   KPICard(title: 'Low Stock', value: '${s.lowStockProducts}', icon: Icons.warning_rounded, color: AppColors.warning),
                   KPICard(title: 'Pending Payments', value: '${s.pendingPayments}', icon: Icons.schedule, color: AppColors.error),
-                  KPICard(title: 'Cash Balance', value: '\$${s.cashBalance}', icon: Icons.account_balance_wallet, color: AppColors.info),
+                  KPICard(title: 'Cash Balance', value: 'EGP ${s.cashBalance}', icon: Icons.account_balance_wallet, color: AppColors.info),
                 ],
               );
             }),

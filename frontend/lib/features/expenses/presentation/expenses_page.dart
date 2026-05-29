@@ -660,9 +660,17 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
       ),
     );
     if (confirmed == true) {
-      final repo = ref.read(expensesRepositoryProvider);
-      await repo.delete(id);
-      invalidateAfterExpense(ref);
+      try {
+        final repo = ref.read(expensesRepositoryProvider);
+        await repo.delete(id);
+        invalidateAfterExpense(ref);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete expense: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
     }
   }
 

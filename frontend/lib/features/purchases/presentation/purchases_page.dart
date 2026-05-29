@@ -97,7 +97,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                               ? IconButton(
                                   icon: const Icon(Icons.clear),
                                   onPressed: () {
-                                    _searchController.clear;
+                                    _searchController.clear();
                                     ref.read(purchasesSearchProvider.notifier).state = '';
                                   },
                                 )

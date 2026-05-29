@@ -130,24 +130,39 @@ class NotificationsPage extends ConsumerWidget {
   }
 
   Future<void> _markRead(WidgetRef ref, int notificationId) async {
-    final repo = ref.read(notificationsRepositoryProvider);
-    await repo.markAsRead(notificationId);
-    ref.invalidate(notificationsProvider);
-    ref.invalidate(unreadCountProvider);
+    try {
+      final repo = ref.read(notificationsRepositoryProvider);
+      await repo.markAsRead(notificationId);
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(unreadCountProvider);
+    } catch (_) {
+      // Silently fail — notification will remain unread visually
+    }
   }
 
   Future<void> _markAllRead(BuildContext context, WidgetRef ref) async {
-    final repo = ref.read(notificationsRepositoryProvider);
-    await repo.markAllAsRead();
-    ref.invalidate(notificationsProvider);
-    ref.invalidate(unreadCountProvider);
-    if (context.mounted) {
-      _showSnackBar(
-        context,
-        message: 'All notifications marked as read',
-        icon: Icons.done_all_rounded,
-        color: AppColors.primary,
-      );
+    try {
+      final repo = ref.read(notificationsRepositoryProvider);
+      await repo.markAllAsRead();
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(unreadCountProvider);
+      if (context.mounted) {
+        _showSnackBar(
+          context,
+          message: 'All notifications marked as read',
+          icon: Icons.done_all_rounded,
+          color: AppColors.primary,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showSnackBar(
+          context,
+          message: 'Failed to mark notifications',
+          icon: Icons.error_outline,
+          color: AppColors.error,
+        );
+      }
     }
   }
 
