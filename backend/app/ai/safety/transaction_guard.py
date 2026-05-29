@@ -155,10 +155,17 @@ class TransactionGuard:
         return json.loads(raw) if raw else None
 
     def confirm_and_clear(self, confirmation_id: str) -> Optional[dict]:
-        raw = self.redis.get(f"{PENDING_KEY_PREFIX}{confirmation_id}")
+        """Atomically retrieve and delete a pending transaction.
+
+        Uses Redis GETDEL (Redis 6.2+) to prevent race conditions where
+        two concurrent requests could both read and execute the same
+        pending transaction.
+        """
+        key = f"{PENDING_KEY_PREFIX}{confirmation_id}"
+        # GETDEL atomically gets the value and deletes the key in one operation
+        raw = self.redis.getdel(key)
         if not raw:
             return None
-        self.redis.delete(f"{PENDING_KEY_PREFIX}{confirmation_id}")
         return json.loads(raw)
 
     def store_rollback_info(self, tool_name: str, params: dict, result: dict) -> str:
