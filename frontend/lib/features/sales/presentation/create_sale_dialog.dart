@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/validation_error_banner.dart';
 import '../../customers/data/customers_repository.dart';
+import '../../customers/presentation/customers_provider.dart';
 import '../../products/data/products_repository.dart';
 import '../data/sales_repository.dart';
 import 'sales_provider.dart';

@@ -5,6 +5,7 @@ import '../../../core/utils/app_refresh.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../customers/data/customers_repository.dart';
+import '../../customers/presentation/customers_provider.dart';
 import '../../whatsapp/data/whatsapp_repository.dart';
 import '../data/sales_repository.dart';
 import 'sales_provider.dart';
