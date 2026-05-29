@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.database import get_db
 from app.models.users import User
-from app.core.security import verify_password, hash_password, create_access_token
+from app.core.security import verify_password, hash_password, create_access_token, decode_access_token
 from app.core.deps import get_current_user
 from app.core.redis import get_redis
 from app.services.cache_service import CacheService
 from app.schemas.users import LoginRequest, TokenResponse, ChangePasswordRequest, UserCreate, UserResponse
+from app.config import settings
 
 router = APIRouter()
 
@@ -90,6 +91,40 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     return TokenResponse(
         access_token="",
+        user_id=current_user.user_id,
+        full_name=current_user.full_name,
+        role=current_user.role,
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(current_user: User = Depends(get_current_user)):
+    """Issue a new access token for an authenticated user.
+
+    The client should call this before the current token expires
+    (e.g., when receiving a 401 or proactively before expiry).
+    The existing token is validated via get_current_user — if it's
+    already expired, the user must re-login.
+    """
+    if not current_user.active_status:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account deactivated. Cannot refresh token.",
+        )
+    new_token = create_access_token({"sub": str(current_user.user_id), "role": current_user.role})
+
+    # Update session in cache
+    cache = CacheService(get_redis())
+    cache.set_session(current_user.user_id, {
+        "user_id": current_user.user_id,
+        "username": current_user.username,
+        "role": current_user.role,
+        "full_name": current_user.full_name,
+        "login_time": datetime.utcnow().isoformat(),
+    })
+
+    return TokenResponse(
+        access_token=new_token,
         user_id=current_user.user_id,
         full_name=current_user.full_name,
         role=current_user.role,
