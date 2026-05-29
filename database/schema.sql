@@ -295,7 +295,7 @@ CREATE TABLE sales_invoice_items (
     item_id SERIAL PRIMARY KEY,
     invoice_id INTEGER NOT NULL REFERENCES sales_invoices(invoice_id),
     product_id INTEGER NOT NULL REFERENCES products(product_id),
-    sold_quantity DECIMAL(14, 4) NOT NULL,
+    sold_quantity DECIMAL(14, 4) NOT NULL CHECK (sold_quantity > 0),
     unit_type VARCHAR(20) NOT NULL CHECK (unit_type IN ('meter', 'piece', 'carton')),
     conversion_factor_used DECIMAL(10, 4),
     carton_count DECIMAL(10, 2),
@@ -331,7 +331,7 @@ CREATE TABLE sales_return_items (
 CREATE TABLE purchase_invoices (
     purchase_invoice_id SERIAL PRIMARY KEY,
     supplier_id INTEGER NOT NULL REFERENCES suppliers(supplier_id),
-    invoice_number VARCHAR(50) NOT NULL,
+    invoice_number VARCHAR(50) NOT NULL UNIQUE,
     purchase_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total_amount DECIMAL(14, 2) NOT NULL DEFAULT 0,
     paid_amount DECIMAL(14, 2) NOT NULL DEFAULT 0,
@@ -344,7 +344,7 @@ CREATE TABLE purchase_invoice_items (
     item_id SERIAL PRIMARY KEY,
     purchase_invoice_id INTEGER NOT NULL REFERENCES purchase_invoices(purchase_invoice_id),
     product_id INTEGER NOT NULL REFERENCES products(product_id),
-    purchased_quantity DECIMAL(14, 4) NOT NULL,
+    purchased_quantity DECIMAL(14, 4) NOT NULL CHECK (purchased_quantity > 0),
     purchase_price DECIMAL(12, 2) NOT NULL,
     total_cost DECIMAL(14, 2) NOT NULL
 );
@@ -373,7 +373,7 @@ CREATE TABLE customer_payments (
     payment_id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES customers(customer_id),
     related_invoice_id INTEGER REFERENCES sales_invoices(invoice_id),
-    payment_amount DECIMAL(14, 2) NOT NULL,
+    payment_amount DECIMAL(14, 2) NOT NULL CHECK (payment_amount > 0),
     payment_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT
 );
@@ -382,7 +382,7 @@ CREATE TABLE supplier_payments (
     payment_id SERIAL PRIMARY KEY,
     supplier_id INTEGER NOT NULL REFERENCES suppliers(supplier_id),
     related_purchase_invoice_id INTEGER REFERENCES purchase_invoices(purchase_invoice_id),
-    payment_amount DECIMAL(14, 2) NOT NULL,
+    payment_amount DECIMAL(14, 2) NOT NULL CHECK (payment_amount > 0),
     payment_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT
 );
@@ -432,14 +432,15 @@ CREATE TABLE expense_categories (
 CREATE TABLE expenses (
     expense_id SERIAL PRIMARY KEY,
     expense_category VARCHAR(100) NOT NULL,
+    expense_category_id INTEGER REFERENCES expense_categories(category_id),
     expense_name VARCHAR(200) NOT NULL,
-    amount DECIMAL(14, 2) NOT NULL,
+    amount DECIMAL(14, 2) NOT NULL CHECK (amount > 0),
     payment_method VARCHAR(30) DEFAULT 'cash',
     paid_by VARCHAR(100),
     receipt_number VARCHAR(50),
     expense_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
-    created_by INTEGER
+    created_by INTEGER REFERENCES users(user_id)
 );
 
 -- 22. Waste
@@ -447,7 +448,7 @@ CREATE TABLE waste (
     waste_id SERIAL PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(product_id),
     warehouse_id INTEGER NOT NULL REFERENCES warehouses(warehouse_id),
-    quantity DECIMAL(14, 4) NOT NULL,
+    quantity DECIMAL(14, 4) NOT NULL CHECK (quantity > 0),
     waste_reason VARCHAR(200),
     waste_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT
@@ -459,9 +460,10 @@ CREATE TABLE warehouse_transfers (
     from_warehouse_id INTEGER NOT NULL REFERENCES warehouses(warehouse_id),
     to_warehouse_id INTEGER NOT NULL REFERENCES warehouses(warehouse_id),
     product_id INTEGER NOT NULL REFERENCES products(product_id),
-    quantity DECIMAL(14, 4) NOT NULL,
+    quantity DECIMAL(14, 4) NOT NULL CHECK (quantity > 0),
     transfer_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    notes TEXT
+    notes TEXT,
+    CONSTRAINT chk_different_warehouses CHECK (from_warehouse_id != to_warehouse_id)
 );
 
 -- ============================================================
@@ -524,8 +526,36 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION fn_refresh_financial_summary_range(p_start_date DATE, p_end_date DATE DEFAULT CURRENT_DATE) RETURNS VOID AS $$
-DECLARE v_date DATE;
-BEGIN v_date := p_start_date; WHILE v_date <= p_end_date LOOP PERFORM fn_refresh_daily_financial_summary(v_date); v_date := v_date + 1; END LOOP; END;
+BEGIN
+    -- Set-based approach: compute all days at once (replaces slow day-by-day loop)
+    INSERT INTO daily_financial_summary (summary_date, revenue, cogs, gross_profit, expenses, net_profit, sales_count, returns_amount, last_updated)
+    SELECT
+        d.day_date::date,
+        COALESCE(s.revenue, 0),
+        COALESCE(s.cogs, 0),
+        COALESCE(s.revenue, 0) - COALESCE(s.cogs, 0),
+        COALESCE(e.total_expenses, 0),
+        (COALESCE(s.revenue, 0) - COALESCE(s.cogs, 0)) - COALESCE(e.total_expenses, 0),
+        COALESCE(s.sales_count, 0),
+        COALESCE(r.returns_amount, 0),
+        NOW()
+    FROM generate_series(p_start_date, p_end_date, '1 day'::interval) AS d(day_date)
+    LEFT JOIN LATERAL (
+        SELECT SUM(sii.total_price) AS revenue, SUM(sii.sold_quantity * sii.cost_at_sale) AS cogs, COUNT(DISTINCT si.invoice_id) AS sales_count
+        FROM sales_invoice_items sii JOIN sales_invoices si ON si.invoice_id = sii.invoice_id
+        WHERE si.invoice_date::date = d.day_date::date
+    ) s ON TRUE
+    LEFT JOIN LATERAL (
+        SELECT SUM(amount) AS total_expenses FROM expenses WHERE expense_date::date = d.day_date::date
+    ) e ON TRUE
+    LEFT JOIN LATERAL (
+        SELECT SUM(returned_amount) AS returns_amount FROM sales_returns WHERE return_date::date = d.day_date::date
+    ) r ON TRUE
+    ON CONFLICT (summary_date) DO UPDATE SET
+        revenue=EXCLUDED.revenue, cogs=EXCLUDED.cogs, gross_profit=EXCLUDED.gross_profit,
+        expenses=EXCLUDED.expenses, net_profit=EXCLUDED.net_profit,
+        sales_count=EXCLUDED.sales_count, returns_amount=EXCLUDED.returns_amount, last_updated=NOW();
+END;
 $$ LANGUAGE plpgsql;
 
 -- Accounting Views
@@ -593,9 +623,13 @@ CREATE INDEX idx_inventory_transactions_type ON inventory_transactions(transacti
 CREATE INDEX idx_inventory_transactions_product_warehouse ON inventory_transactions(product_id, warehouse_id);
 CREATE INDEX idx_sales_invoices_customer ON sales_invoices(customer_id);
 CREATE INDEX idx_sales_invoices_date ON sales_invoices(invoice_date);
+CREATE INDEX idx_sales_invoices_payment_status ON sales_invoices(payment_status);
+CREATE INDEX idx_sales_invoices_date_only ON sales_invoices((invoice_date::date));
 CREATE INDEX idx_sales_invoice_items_invoice ON sales_invoice_items(invoice_id);
 CREATE INDEX idx_sales_invoice_items_product ON sales_invoice_items(product_id);
 CREATE INDEX idx_purchase_invoices_supplier ON purchase_invoices(supplier_id);
+CREATE INDEX idx_purchase_invoices_date ON purchase_invoices(purchase_date);
+CREATE INDEX idx_purchase_invoices_payment_status ON purchase_invoices(payment_status);
 CREATE INDEX idx_purchase_invoice_items_invoice ON purchase_invoice_items(purchase_invoice_id);
 CREATE INDEX idx_customer_payments_customer ON customer_payments(customer_id);
 CREATE INDEX idx_supplier_payments_supplier ON supplier_payments(supplier_id);
@@ -606,11 +640,13 @@ CREATE INDEX idx_expenses_category ON expenses(expense_category);
 CREATE INDEX idx_expenses_date ON expenses(expense_date);
 CREATE INDEX idx_ledger_entries_account ON ledger_entries(account_id);
 CREATE INDEX idx_ledger_entries_entity ON ledger_entries(entity_type, entity_id);
+CREATE INDEX idx_ledger_entries_date ON ledger_entries(entry_date);
 CREATE INDEX idx_daily_financial_summary_date ON daily_financial_summary(summary_date);
 CREATE INDEX idx_activity_logs_user ON activity_logs(user_id);
 CREATE INDEX idx_notifications_user ON notifications(user_id);
 CREATE INDEX idx_notifications_read ON notifications(is_read);
 CREATE INDEX idx_notifications_date ON notifications(created_date);
+CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read) WHERE is_read = FALSE;
 
 -- ============================================================
 -- SEED DATA
