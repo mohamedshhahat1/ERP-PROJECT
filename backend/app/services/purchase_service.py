@@ -116,18 +116,32 @@ class PurchaseService:
             invoice_items = self.repo.get_items_for_invoice(purchase_invoice_id)
             item_map = {item.product_id: item for item in invoice_items}
 
+            # Calculate previously returned quantities for this invoice
+            existing_returns = self.repo.get_returns_for_invoice(purchase_invoice_id)
+            previously_returned = {}
+            for prev_return in existing_returns:
+                prev_items = self.repo.get_return_items(prev_return.return_id)
+                for prev_item in prev_items:
+                    previously_returned[prev_item.product_id] = (
+                        previously_returned.get(prev_item.product_id, Decimal("0")) + prev_item.returned_quantity
+                    )
+
             for ret_item in data.items:
                 orig = item_map.get(ret_item.product_id)
                 if not orig:
                     raise ValidationError(f"Product {ret_item.product_id} not found in this invoice")
-                if ret_item.returned_quantity > orig.purchased_quantity:
+                already_returned = previously_returned.get(ret_item.product_id, Decimal("0"))
+                available_to_return = orig.purchased_quantity - already_returned
+                if ret_item.returned_quantity > available_to_return:
                     raise ValidationError(
-                        f"Return quantity ({ret_item.returned_quantity}) exceeds purchased quantity ({orig.purchased_quantity})"
+                        f"Return quantity ({ret_item.returned_quantity}) exceeds remaining returnable "
+                        f"quantity ({available_to_return}) for product {ret_item.product_id}. "
+                        f"Purchased: {orig.purchased_quantity}, Previously returned: {already_returned}"
                     )
-                available = self.inventory.get_available_quantity(ret_item.product_id, data.warehouse_id)
-                if ret_item.returned_quantity > available:
+                available_stock = self.inventory.get_available_quantity(ret_item.product_id, data.warehouse_id)
+                if ret_item.returned_quantity > available_stock:
                     raise ValidationError(
-                        f"Return quantity ({ret_item.returned_quantity}) exceeds available stock ({available}). "
+                        f"Return quantity ({ret_item.returned_quantity}) exceeds available stock ({available_stock}). "
                         f"Cannot return more than what is currently in stock."
                     )
 

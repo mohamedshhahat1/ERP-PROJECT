@@ -31,7 +31,7 @@ def get_unread_count(current_user: User = Depends(get_current_user), db: Session
 @router.put("/{notification_id}/read")
 def mark_notification_read(notification_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     service = NotificationService(db)
-    service.mark_read(notification_id)
+    service.mark_read(notification_id, user_id=current_user.user_id)
     return {"detail": "Notification marked as read"}
 
 

@@ -1,7 +1,6 @@
 import redis
 import json
 from decimal import Decimal
-from datetime import timedelta
 from app.config import settings
 
 
@@ -23,9 +22,13 @@ class RedisClient:
     def get(self, key: str) -> str | None:
         return self._client.get(key)
 
-    def set(self, key: str, value: str, ttl: int | None = None):
-        if ttl:
-            self._client.setex(key, ttl, value)
+    def getdel(self, key: str) -> str | None:
+        return self._client.getdel(key)
+
+    def set(self, key: str, value: str, ttl: int | None = None, ex: int | None = None):
+        timeout = ttl or ex
+        if timeout:
+            self._client.setex(key, timeout, value)
         else:
             self._client.set(key, value)
 
@@ -43,15 +46,26 @@ class RedisClient:
         self.set(key, data, ttl)
 
     def delete_pattern(self, pattern: str):
-        keys = self._client.keys(pattern)
-        if keys:
-            self._client.delete(*keys)
+        """Delete keys matching pattern using SCAN (non-blocking, production-safe)."""
+        cursor = 0
+        while True:
+            cursor, keys = self._client.scan(cursor, match=pattern, count=100)
+            if keys:
+                self._client.delete(*keys)
+            if cursor == 0:
+                break
 
     def incr(self, key: str) -> int:
         return self._client.incr(key)
 
     def expire(self, key: str, ttl: int):
         self._client.expire(key, ttl)
+
+    def pipeline(self):
+        return self._client.pipeline()
+
+    def smembers(self, key: str) -> set:
+        return self._client.smembers(key)
 
     def ping(self) -> bool:
         try:

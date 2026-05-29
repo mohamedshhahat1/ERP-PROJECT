@@ -47,3 +47,8 @@ class PurchaseRepository:
         self.db.add(item)
         self.db.flush()
         return item
+
+    def get_return_items(self, return_id: int) -> list[PurchaseReturnItem]:
+        return self.db.query(PurchaseReturnItem).filter(
+            PurchaseReturnItem.return_id == return_id
+        ).all()

@@ -8,12 +8,18 @@ from app.models.payments import CashTransaction
 from app.services.ledger_service import ACCOUNT_CODES
 from app.services.cache_service import CacheService
 from app.core.redis import get_redis
+from app.core.exceptions import ValidationError
 
 
 class OpeningBalanceService:
     def __init__(self, db: Session):
         self.db = db
         self.cache = CacheService(get_redis())
+
+    def _validate_amount(self, amount: Decimal, field_name: str = "Amount"):
+        """Validate opening balance amount is positive."""
+        if amount is None or amount <= 0:
+            raise ValidationError(f"{field_name} must be greater than zero")
 
     def set_customer_opening_balance(
         self,
@@ -22,6 +28,7 @@ class OpeningBalanceService:
         balance_type: str = "receivable",
         notes: str | None = None,
     ) -> dict:
+        self._validate_amount(amount, "Customer opening balance")
         customer = self.db.query(Customer).filter(Customer.customer_id == customer_id).first()
         if not customer:
             raise ValueError(f"Customer {customer_id} not found")
@@ -65,6 +72,7 @@ class OpeningBalanceService:
         balance_type: str = "payable",
         notes: str | None = None,
     ) -> dict:
+        self._validate_amount(amount, "Supplier opening balance")
         supplier = self.db.query(Supplier).filter(Supplier.supplier_id == supplier_id).first()
         if not supplier:
             raise ValueError(f"Supplier {supplier_id} not found")
@@ -107,6 +115,7 @@ class OpeningBalanceService:
         account_name: str = "cash",
         notes: str | None = None,
     ) -> dict:
+        self._validate_amount(amount, "Cash opening balance")
         entry = LedgerEntry(
             account_id=ACCOUNT_CODES["cash"],
             debit=amount,

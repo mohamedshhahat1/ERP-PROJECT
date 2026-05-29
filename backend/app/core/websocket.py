@@ -58,12 +58,15 @@ class ConnectionManager:
 
     async def broadcast_all(self, message: dict):
         data = json.dumps(message)
-        for channel_connections in self._connections.values():
+        for channel, channel_connections in list(self._connections.items()):
+            disconnected = set()
             for ws in channel_connections:
                 try:
                     await ws.send_text(data)
                 except Exception:
-                    pass
+                    disconnected.add(ws)
+            for ws in disconnected:
+                channel_connections.discard(ws)
 
     @property
     def active_connections(self) -> int:

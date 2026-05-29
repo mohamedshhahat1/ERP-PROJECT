@@ -29,10 +29,16 @@ class NotificationService:
             )
         return query.order_by(Notification.created_date.desc()).limit(limit).all()
 
-    def mark_read(self, notification_id: int):
-        notif = self.db.query(Notification).filter(
+    def mark_read(self, notification_id: int, user_id: int | None = None):
+        """Mark a notification as read. If user_id is provided, only mark if it belongs to the user."""
+        query = self.db.query(Notification).filter(
             Notification.notification_id == notification_id
-        ).first()
+        )
+        if user_id:
+            query = query.filter(
+                (Notification.user_id == user_id) | (Notification.user_id == None)
+            )
+        notif = query.first()
         if notif:
             notif.is_read = True
             self.db.commit()

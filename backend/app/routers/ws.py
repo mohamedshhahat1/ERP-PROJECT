@@ -80,7 +80,11 @@ async def ws_ai_stream(websocket: WebSocket, token: str = Query(None)):
     try:
         while True:
             data = await websocket.receive_text()
-            message = json.loads(data)
+            try:
+                message = json.loads(data)
+            except json.JSONDecodeError:
+                await websocket.send_text(json.dumps({"type": "error", "detail": "Invalid JSON"}))
+                continue
             # Stream AI response back token by token
             await _stream_ai_response(websocket, user_id, message)
     except WebSocketDisconnect:

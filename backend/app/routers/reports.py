@@ -261,7 +261,7 @@ def warehouse_stock_report(
 
 @router.get("/sales-by-period")
 def sales_by_period_report(
-    period: str = Query(default="day", regex="^(day|week|month)$"),
+    period: str = Query(default="day", pattern="^(day|week|month)$"),
     start_date: date = Query(default=None),
     end_date: date = Query(default=None),
     current_user: User = Depends(require_permission("reports:read")),
