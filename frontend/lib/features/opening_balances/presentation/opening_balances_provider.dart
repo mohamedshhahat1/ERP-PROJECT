@@ -6,4 +6,9 @@ final openingBalancesProvider = FutureProvider<List<Map<String, dynamic>>>((ref)
   return repo.getOpeningBalances();
 });
 
+final openingBalancesLockProvider = FutureProvider<bool>((ref) async {
+  final repo = ref.read(openingBalanceRepositoryProvider);
+  return repo.getLockStatus();
+});
+
 final openingBalancesTabProvider = StateProvider<int>((ref) => 0);

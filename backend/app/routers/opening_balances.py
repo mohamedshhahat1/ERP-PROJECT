@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.opening_balance import (
@@ -7,10 +7,50 @@ from app.schemas.opening_balance import (
     CashOpeningBalanceCreate,
 )
 from app.services.opening_balance_service import OpeningBalanceService
-from app.core.deps import require_permission
+from app.core.deps import require_permission, require_admin
+from app.core.redis import get_redis
 from app.models.users import User
 
 router = APIRouter()
+
+LOCK_KEY = "opening_balances:locked"
+
+
+def _is_locked() -> bool:
+    """Check if opening balances are locked."""
+    redis = get_redis()
+    return redis.get(LOCK_KEY) == "true"
+
+
+def _require_unlocked():
+    """Raise 403 if opening balances are locked."""
+    if _is_locked():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Opening balances are locked. An admin must unlock them before changes can be made.",
+        )
+
+
+@router.get("/lock-status")
+def get_lock_status(current_user: User = Depends(require_permission("accounting:read"))):
+    """Check if opening balances are locked."""
+    return {"locked": _is_locked()}
+
+
+@router.post("/lock")
+def lock_opening_balances(current_user: User = Depends(require_admin)):
+    """Lock opening balances (admin only). Prevents any further changes."""
+    redis = get_redis()
+    redis.set(LOCK_KEY, "true")
+    return {"detail": "Opening balances have been locked.", "locked": True}
+
+
+@router.post("/unlock")
+def unlock_opening_balances(current_user: User = Depends(require_admin)):
+    """Unlock opening balances (admin only). Allows changes again."""
+    redis = get_redis()
+    redis.delete(LOCK_KEY)
+    return {"detail": "Opening balances have been unlocked.", "locked": False}
 
 
 @router.post("/customer", status_code=201)
@@ -19,6 +59,7 @@ def create_customer_opening_balance(
     current_user: User = Depends(require_permission("accounting:write")),
     db: Session = Depends(get_db),
 ):
+    _require_unlocked()
     service = OpeningBalanceService(db)
     try:
         result = service.set_customer_opening_balance(
@@ -39,6 +80,7 @@ def create_supplier_opening_balance(
     current_user: User = Depends(require_permission("accounting:write")),
     db: Session = Depends(get_db),
 ):
+    _require_unlocked()
     service = OpeningBalanceService(db)
     try:
         result = service.set_supplier_opening_balance(
@@ -59,6 +101,7 @@ def create_cash_opening_balance(
     current_user: User = Depends(require_permission("accounting:write")),
     db: Session = Depends(get_db),
 ):
+    _require_unlocked()
     service = OpeningBalanceService(db)
     result = service.set_cash_opening_balance(
         amount=data.amount,

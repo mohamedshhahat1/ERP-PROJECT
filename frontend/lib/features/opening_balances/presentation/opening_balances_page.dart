@@ -45,22 +45,7 @@ class _OpeningBalancesPageState extends ConsumerState<OpeningBalancesPage> with 
                 const SizedBox(width: 12),
                 const Text('Opening Balances', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.warning.withOpacity(0.3)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.lock_outline, size: 14, color: AppColors.warning),
-                      SizedBox(width: 6),
-                      Text('Lock after go-live', style: TextStyle(fontSize: 12, color: AppColors.warning, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
+                _LockStatusWidget(),
               ],
             ),
           ),
@@ -664,6 +649,116 @@ class _CashOpeningBalanceTabState extends ConsumerState<_CashOpeningBalanceTab> 
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+// ─── Lock Status Widget ──────────────────────────────────────────────────────
+class _LockStatusWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lockAsync = ref.watch(openingBalancesLockProvider);
+
+    return lockAsync.when(
+      loading: () => const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (isLocked) => InkWell(
+        onTap: () => _showLockDialog(context, ref, isLocked),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isLocked
+                ? AppColors.error.withOpacity(0.1)
+                : AppColors.success.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isLocked
+                  ? AppColors.error.withOpacity(0.3)
+                  : AppColors.success.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isLocked ? Icons.lock : Icons.lock_open,
+                size: 14,
+                color: isLocked ? AppColors.error : AppColors.success,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                isLocked ? 'Locked' : 'Unlocked',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isLocked ? AppColors.error : AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLockDialog(BuildContext context, WidgetRef ref, bool isLocked) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(isLocked ? Icons.lock_open : Icons.lock, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Text(isLocked ? 'Unlock Opening Balances?' : 'Lock Opening Balances?'),
+          ],
+        ),
+        content: Text(
+          isLocked
+              ? 'Unlocking will allow changes to opening balances. Are you sure?'
+              : 'Locking will prevent any changes to opening balances until an admin unlocks them. This is recommended after go-live.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final repo = ref.read(openingBalanceRepositoryProvider);
+                if (isLocked) {
+                  await repo.unlock();
+                } else {
+                  await repo.lock();
+                }
+                ref.invalidate(openingBalancesLockProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(isLocked ? 'Opening balances unlocked' : 'Opening balances locked'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: isLocked ? AppColors.success : AppColors.error,
+            ),
+            child: Text(isLocked ? 'Unlock' : 'Lock'),
+          ),
+        ],
       ),
     );
   }

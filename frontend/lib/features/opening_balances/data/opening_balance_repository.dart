@@ -10,6 +10,19 @@ class OpeningBalanceRepository {
   final Dio _dio;
   OpeningBalanceRepository(this._dio);
 
+  Future<bool> getLockStatus() async {
+    final response = await _dio.get('/opening-balances/lock-status');
+    return response.data['locked'] == true;
+  }
+
+  Future<void> lock() async {
+    await _dio.post('/opening-balances/lock');
+  }
+
+  Future<void> unlock() async {
+    await _dio.post('/opening-balances/unlock');
+  }
+
   Future<Map<String, dynamic>> createCustomerBalance({
     required int customerId,
     required double amount,
