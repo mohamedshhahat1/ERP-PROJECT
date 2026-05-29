@@ -344,21 +344,41 @@ This is not a typical ERP. It's an **AI-first business operating system** where 
 
 ```bash
 # Clone
-git clone https://github.com/coder-contrib/ERP-With-AI-Assistant.git
-cd ERP-With-AI-Assistant
+git clone https://github.com/mohamedshhahat1/ERP-PROJECT.git
+cd ERP-PROJECT
 
-# Set your Anthropic API key
-export ANTHROPIC_API_KEY=sk-ant-api03-your-key
+# Configure environment (REQUIRED)
+cp .env.example .env
+# Edit .env with your values:
+#   POSTGRES_PASSWORD=<strong-password>
+#   REDIS_PASSWORD=<strong-password>
+#   SECRET_KEY=<generate: python -c "import secrets; print(secrets.token_urlsafe(64))">
+#   ANTHROPIC_API_KEY=sk-ant-...
 
 # Start everything
 docker compose up -d
 
-# Seed admin user
-docker compose exec backend python -m app.seeds
-
 # Access
 # Backend API:  http://localhost:8000/docs
-# Login:        admin / admin123
+# Login:        admin / admin123 (change immediately)
+```
+
+### Database Backup
+
+```bash
+# Manual backup
+docker compose exec db pg_dump -U postgres ceramic_erp > backup_$(date +%Y%m%d).sql
+
+# Restore from backup
+docker compose exec -i db psql -U postgres ceramic_erp < backup_20260101.sql
+```
+
+### Running Tests
+
+```bash
+cd backend
+pip install -r requirements.txt
+pytest
 ```
 
 ---

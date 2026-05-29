@@ -11,7 +11,9 @@ from app.routers import auth, products, categories, customers, suppliers, sales,
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     from app.database import Base, engine
+    from app.core.logging_config import configure_logging
     import app.models  # noqa: F401 — ensure all models are registered
+    configure_logging(debug=settings.debug)
     Base.metadata.create_all(bind=engine)
     register_event_handlers()
     yield
