@@ -379,7 +379,7 @@ class _LedgerTab extends ConsumerWidget {
                             child: Text(
                               entry['debit']?.toString() ?? '0',
                               textAlign: TextAlign.right,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: double.tryParse(entry['debit']?.toString() ?? '0') != 0 ? AppColors.success : null),
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: double.tryParse(entry['debit']?.toString() ?? '0') != 0 ? null : AppColors.textSecondary.withOpacity(0.4)),
                             ),
                           ),
                           Expanded(
@@ -387,7 +387,7 @@ class _LedgerTab extends ConsumerWidget {
                             child: Text(
                               entry['credit']?.toString() ?? '0',
                               textAlign: TextAlign.right,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: double.tryParse(entry['credit']?.toString() ?? '0') != 0 ? AppColors.error : null),
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: double.tryParse(entry['credit']?.toString() ?? '0') != 0 ? null : AppColors.textSecondary.withOpacity(0.4)),
                             ),
                           ),
                         ],
