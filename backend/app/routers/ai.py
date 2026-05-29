@@ -121,13 +121,13 @@ def execute_ai_tool(data: ToolRequest, current_user: User = Depends(get_current_
                 detail=str(e),
             )
 
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return service.execute_tool(data.agent, data.tool, data.params)
 
 
 @router.post("/query")
 def ai_query(data: ChatRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     routing = service.classify_and_route(data.message)
     context = service.search_context(data.message)
     return {"routing": routing, "context": context, "session_id": data.session_id}
@@ -137,10 +137,12 @@ def ai_query(data: ChatRequest, current_user: User = Depends(get_current_user), 
 
 @router.get("/agents")
 def list_agents(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return {
-        agent_type: {"tools": agent.get_tools_schema(), "description": agent.system_prompt.split("\n")[0]}
-        for agent_type, agent in service.agents.items()
+        "manager": {
+            "tools_count": len(service.get_tools_schema()),
+            "description": "Main AI agent — handles all ERP operations via natural language",
+        }
     }
 
 
@@ -148,31 +150,31 @@ def list_agents(current_user: User = Depends(get_current_user), db: Session = De
 
 @router.get("/predict/demand/{product_id}")
 def predict_demand(product_id: int, days_back: int = 30, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return service.demand_forecast(product_id, days_back)
 
 
 @router.get("/predict/low-stock")
 def predict_low_stock(days_ahead: int = 7, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return service.low_stock_prediction(days_ahead)
 
 
 @router.get("/predict/trending")
 def predict_trending(days_back: int = 30, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return service.best_selling_prediction(days_back)
 
 
 @router.get("/predict/customer/{customer_id}")
 def predict_customer(customer_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return service.customer_behavior(customer_id)
 
 
 @router.get("/analyze/profit")
 def analyze_profit(start_date: str, end_date: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return service.profit_analysis(start_date, end_date)
 
 
@@ -180,7 +182,7 @@ def analyze_profit(start_date: str, end_date: str, current_user: User = Depends(
 
 @router.get("/search")
 def ai_search(query: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return service.search_context(query)
 
 
@@ -189,13 +191,13 @@ def ai_search(query: str, current_user: User = Depends(get_current_user), db: Se
 @router.get("/conversation/{session_id}")
 def get_conversation(session_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _validate_session_ownership(session_id, current_user.user_id)
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     return {"messages": service.get_conversation(session_id)}
 
 
 @router.delete("/conversation/{session_id}")
 def clear_conversation(session_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _validate_session_ownership(session_id, current_user.user_id)
-    service = AIService(db)
+    service = AIService(db, user_role=current_user.role)
     service.clear_conversation(session_id)
     return {"detail": "Conversation cleared"}

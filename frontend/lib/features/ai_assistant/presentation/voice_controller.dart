@@ -245,7 +245,7 @@ class VoiceChatNotifier extends StateNotifier<VoiceChatState> {
       ));
 
       state = state.copyWith(
-        voiceState: response.audioBase64 != null ? VoiceState.speaking : VoiceState.idle,
+        voiceState: response.audioBase64 != null && response.audioBase64!.isNotEmpty ? VoiceState.speaking : VoiceState.idle,
         currentAiText: response.transcript,
       );
     } catch (e) {
@@ -274,7 +274,7 @@ class VoiceChatNotifier extends StateNotifier<VoiceChatState> {
       ));
 
       state = state.copyWith(
-        voiceState: response.audioBase64 != null ? VoiceState.speaking : VoiceState.idle,
+        voiceState: response.audioBase64 != null && response.audioBase64!.isNotEmpty ? VoiceState.speaking : VoiceState.idle,
         currentAiText: response.transcript,
       );
     } catch (e) {

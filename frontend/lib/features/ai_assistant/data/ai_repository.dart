@@ -45,7 +45,10 @@ class AIRepository {
     final response = await _dio.post(
       '/ai/chat/stream',
       data: {'session_id': sessionId, 'message': message},
-      options: Options(responseType: ResponseType.stream),
+      options: Options(
+        responseType: ResponseType.stream,
+        receiveTimeout: const Duration(minutes: 3),
+      ),
     );
 
     final stream = response.data.stream as Stream<List<int>>;

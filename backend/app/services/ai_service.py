@@ -1,20 +1,24 @@
 from sqlalchemy.orm import Session
 from app.ai.agents.manager_agent import ManagerAgent
+from app.ai.executor import ToolExecutor
 from app.ai.tools.reporting_tools import ReportingTools
+from app.ai.tools.tool_schemas import TOOL_SCHEMAS
 from app.ai.memory.conversation import ConversationMemory
 from app.ai.rag.retriever import ERPContextRetriever
 from app.core.redis import get_redis
 from app.services.cache_service import CacheService
+import json
 
 
 class AIService:
     """Orchestrates AI agents, memory, RAG, and predictions."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_role: str = "ai_agent"):
         self.db = db
+        self.user_role = user_role
         self.cache = CacheService(get_redis())
         self.agents = {
-            "manager": ManagerAgent(db),
+            "manager": ManagerAgent(db, user_role=user_role),
         }
         self.reporting = ReportingTools(db)
         self.retriever = ERPContextRetriever(db)
@@ -23,14 +27,22 @@ class AIService:
         return self.agents.get(agent_type)
 
     def execute_tool(self, agent_type: str, tool_name: str, params: dict) -> dict:
-        agent = self.get_agent(agent_type)
-        if not agent:
-            return {"error": f"Unknown agent: {agent_type}"}
-        return agent.execute_tool(tool_name, params)
+        """Execute a single AI tool directly (bypassing the LLM)."""
+        executor = ToolExecutor(self.db, session_id="direct", user_role=self.user_role, channel="api")
+        result = executor.execute(tool_name, params)
+        try:
+            return json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            return {"result": result}
 
     def classify_and_route(self, query: str) -> dict:
-        manager = self.agents["manager"]
-        return manager.execute_query(query)
+        """Use RAG to find relevant context for a query."""
+        context = self.search_context(query)
+        return {"query": query, "context": context}
+
+    def get_tools_schema(self) -> list:
+        """Return all available tool schemas."""
+        return TOOL_SCHEMAS
 
     # --- PREDICTIONS ---
 
