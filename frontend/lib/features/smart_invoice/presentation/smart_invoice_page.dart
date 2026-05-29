@@ -254,12 +254,7 @@ class _SmartInvoicePageState extends ConsumerState<SmartInvoicePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 48,
-              height: 48,
-              child: CircularProgressIndicator(strokeWidth: 3),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
             Text(
               'Analyzing Invoice...',
               style: TextStyle(
@@ -268,18 +263,66 @@ class _SmartInvoicePageState extends ConsumerState<SmartInvoicePage> {
                 color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'AI is extracting items, quantities, and prices from your image',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-              ),
-            ),
+            const SizedBox(height: 24),
+            // AI Pipeline Timeline
+            _buildPipelineTimeline(isDark),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPipelineTimeline(bool isDark) {
+    final steps = ref.watch(smartInvoiceProvider).pipelineSteps;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: steps.map((step) {
+        final icon = step.completed
+            ? const Icon(Icons.check_circle, color: AppColors.success, size: 22)
+            : step.active
+                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
+                : step.failed
+                    ? const Icon(Icons.error, color: AppColors.error, size: 22)
+                    : Icon(Icons.circle_outlined, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary.withOpacity(0.4), size: 22);
+
+        final textColor = step.completed
+            ? AppColors.success
+            : step.active
+                ? (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary)
+                : step.failed
+                    ? AppColors.error
+                    : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary.withOpacity(0.5));
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      step.labelAr,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: step.active ? FontWeight.w600 : FontWeight.w400,
+                        color: textColor,
+                      ),
+                    ),
+                    if (step.detail != null)
+                      Text(
+                        step.detail!,
+                        style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
