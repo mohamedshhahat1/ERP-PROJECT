@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/notifications_repository.dart';
 
-final notificationsProvider = FutureProvider.autoDispose<List<NotificationModel>>((ref) async {
+// Not autoDispose — data persists during navigation (invalidated explicitly on changes)
+final notificationsProvider = FutureProvider<List<NotificationModel>>((ref) async {
   final repo = ref.read(notificationsRepositoryProvider);
   return repo.getAll();
 });
 
+// autoDispose — always shows fresh count when badge is visible
 final unreadCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final repo = ref.read(notificationsRepositoryProvider);
   return repo.getUnreadCount();
@@ -16,7 +18,7 @@ final severityFilterProvider = StateProvider<String?>((ref) => null);
 
 enum NotificationFilter { all, unread, read }
 
-final filteredNotificationsProvider = Provider.autoDispose<AsyncValue<List<NotificationModel>>>((ref) {
+final filteredNotificationsProvider = Provider<AsyncValue<List<NotificationModel>>>((ref) {
   final notificationsAsync = ref.watch(notificationsProvider);
   final filter = ref.watch(notificationFilterProvider);
   final severity = ref.watch(severityFilterProvider);

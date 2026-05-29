@@ -87,9 +87,12 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
     return MouseRegion(
       onHover: (event) {
-        setState(() {
-          _mousePos = event.localPosition;
-        });
+        // Only rebuild if mouse moved significantly (>10px) to reduce rebuilds
+        if ((_mousePos - event.localPosition).distance > 10) {
+          setState(() {
+            _mousePos = event.localPosition;
+          });
+        }
       },
       child: Scaffold(
         backgroundColor: _C.bg,
@@ -97,11 +100,14 @@ class _LoginPageState extends ConsumerState<LoginPage>
           children: [
             _AnimatedBackground(mousePos: _mousePos),
 
-            // GRID
+            // GRID — wrapped in AnimatedBuilder to repaint on animation tick
             Positioned.fill(
-              child: CustomPaint(
-                painter: _GridPainter(
-                  progress: _controller.value,
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, _) => CustomPaint(
+                  painter: _GridPainter(
+                    progress: _controller.value,
+                  ),
                 ),
               ),
             ),
@@ -324,7 +330,7 @@ class _HeroSection extends StatelessWidget {
                 height: 1.8,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 32),
             Wrap(
               spacing: 18,
               runSpacing: 18,
