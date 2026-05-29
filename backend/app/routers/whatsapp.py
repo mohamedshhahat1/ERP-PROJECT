@@ -307,10 +307,10 @@ def _generate_report_message(db: Session, report_type: str) -> str | None:
 
     elif report_type == "inventory_valuation":
         row = db.execute(text("""
-            SELECT COUNT(product_id), COALESCE(SUM(ic.available_quantity * p.purchase_cost_per_meter), 0), COALESCE(SUM(ic.available_quantity), 0)
+            SELECT COUNT(product_id), COALESCE(SUM(ic.cached_quantity * p.purchase_cost_per_meter), 0), COALESCE(SUM(ic.cached_quantity), 0)
             FROM products p
             JOIN inventory_cache ic ON ic.product_id = p.product_id
-            WHERE ic.available_quantity > 0
+            WHERE ic.cached_quantity > 0
         """)).fetchone()
         product_count, total_value, total_qty = row if row else (0, 0, 0)
         return (
@@ -323,11 +323,11 @@ def _generate_report_message(db: Session, report_type: str) -> str | None:
 
     elif report_type == "low_stock":
         rows = db.execute(text("""
-            SELECT p.product_name, ic.available_quantity
+            SELECT p.product_name, ic.cached_quantity
             FROM products p
             JOIN inventory_cache ic ON ic.product_id = p.product_id
-            WHERE ic.available_quantity <= 10 AND ic.available_quantity > 0
-            ORDER BY ic.available_quantity ASC
+            WHERE ic.cached_quantity <= 10 AND ic.cached_quantity > 0
+            ORDER BY ic.cached_quantity ASC
             LIMIT 15
         """)).fetchall()
         lines = [f"⚠️ تنبيه المخزون المنخفض\n───────────────"]
@@ -438,10 +438,10 @@ def _generate_report_message(db: Session, report_type: str) -> str | None:
     elif report_type == "dead_stock":
         cutoff = (date.today() - timedelta(days=30)).isoformat()
         rows = db.execute(text("""
-            SELECT p.product_name, ic.available_quantity, p.purchase_cost_per_meter * ic.available_quantity as value
+            SELECT p.product_name, ic.cached_quantity, p.purchase_cost_per_meter * ic.cached_quantity as value
             FROM products p
             JOIN inventory_cache ic ON ic.product_id = p.product_id
-            WHERE ic.available_quantity > 0
+            WHERE ic.cached_quantity > 0
               AND p.product_id NOT IN (
                   SELECT DISTINCT si.product_id FROM sales_invoice_items si
                   JOIN sales_invoices inv ON inv.invoice_id = si.invoice_id

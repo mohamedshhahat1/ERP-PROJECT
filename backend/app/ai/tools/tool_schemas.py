@@ -830,7 +830,7 @@ TOOL_SCHEMAS = [
     },
     {
         "name": "reset_user_password",
-        "description": "Reset a user's password to default (123456). They should change it on next login.",
+        "description": "Reset a user's password to a secure random temporary value. The new password is returned in the response. The user should change it on next login.",
         "input_schema": {
             "type": "object",
             "properties": {"user_id": {"type": "integer"}},

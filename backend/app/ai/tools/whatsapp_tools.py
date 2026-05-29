@@ -101,16 +101,16 @@ class WhatsAppTools:
             return {"error": "Bulk WhatsApp messaging is disabled. Enable WHATSAPP_CAN_BULK_MESSAGE in settings."}
 
         query = text("""
-            SELECT c.id, c.name, c.phone, 
+            SELECT c.customer_id, c.customer_name, c.phone_number,
                    SUM(si.total_amount - si.paid_amount) as total_due,
-                   COUNT(si.id) as invoice_count
+                   COUNT(si.invoice_id) as invoice_count
             FROM customers c
-            JOIN sales_invoices si ON si.customer_id = c.id
+            JOIN sales_invoices si ON si.customer_id = c.customer_id
             WHERE si.payment_status IN ('unpaid', 'partial')
-              AND si.created_at < :cutoff_date
-              AND c.phone IS NOT NULL
-              AND c.phone != ''
-            GROUP BY c.id, c.name, c.phone
+              AND si.invoice_date < :cutoff_date
+              AND c.phone_number IS NOT NULL
+              AND c.phone_number != ''
+            GROUP BY c.customer_id, c.customer_name, c.phone_number
             HAVING SUM(si.total_amount - si.paid_amount) > 0
             ORDER BY total_due DESC
             LIMIT :max_messages
@@ -156,11 +156,11 @@ class WhatsAppTools:
         today = date.today().isoformat()
         query = text("""
             SELECT 
-                COUNT(id) as invoice_count,
+                COUNT(invoice_id) as invoice_count,
                 COALESCE(SUM(total_amount), 0) as total_revenue,
                 COALESCE(SUM(paid_amount), 0) as cash_collected
             FROM sales_invoices
-            WHERE DATE(created_at) = :today
+            WHERE DATE(invoice_date) = :today
         """)
         row = self.db.execute(query, {"today": today}).fetchone()
         invoice_count, total_revenue, cash_collected = row if row else (0, 0, 0)
@@ -244,31 +244,31 @@ class WhatsAppTools:
         today = date.today().isoformat()
 
         sales_q = text("""
-            SELECT COUNT(id), COALESCE(SUM(total_amount),0), COALESCE(SUM(paid_amount),0),
-                   COALESCE(SUM(CASE WHEN payment_type='cash' THEN total_amount ELSE 0 END),0),
-                   COALESCE(SUM(CASE WHEN payment_type='credit' THEN total_amount ELSE 0 END),0)
-            FROM sales_invoices WHERE DATE(created_at) = :today
+            SELECT COUNT(invoice_id), COALESCE(SUM(total_amount),0), COALESCE(SUM(paid_amount),0),
+                   COALESCE(SUM(CASE WHEN invoice_type='cash' THEN total_amount ELSE 0 END),0),
+                   COALESCE(SUM(CASE WHEN invoice_type='credit' THEN total_amount ELSE 0 END),0)
+            FROM sales_invoices WHERE DATE(invoice_date) = :today
         """)
         sr = self.db.execute(sales_q, {"today": today}).fetchone()
         sales_count, sales_total, sales_paid, sales_cash, sales_credit = sr if sr else (0,0,0,0,0)
 
         purchases_q = text("""
-            SELECT COUNT(id), COALESCE(SUM(total_amount),0), COALESCE(SUM(paid_amount),0)
-            FROM purchase_invoices WHERE DATE(created_at) = :today
+            SELECT COUNT(purchase_invoice_id), COALESCE(SUM(total_amount),0), COALESCE(SUM(paid_amount),0)
+            FROM purchase_invoices WHERE DATE(purchase_date) = :today
         """)
         pr = self.db.execute(purchases_q, {"today": today}).fetchone()
         purch_count, purch_total, purch_paid = pr if pr else (0,0,0)
 
         expenses_q = text("""
-            SELECT COUNT(id), COALESCE(SUM(amount),0)
+            SELECT COUNT(expense_id), COALESCE(SUM(amount),0)
             FROM expenses WHERE DATE(expense_date) = :today
         """)
         er = self.db.execute(expenses_q, {"today": today}).fetchone()
         exp_count, exp_total = er if er else (0,0)
 
         returns_q = text("""
-            SELECT COUNT(id), COALESCE(SUM(total_amount),0)
-            FROM sales_returns WHERE DATE(created_at) = :today
+            SELECT COUNT(return_id), COALESCE(SUM(returned_amount),0)
+            FROM sales_returns WHERE DATE(return_date) = :today
         """)
         rr = self.db.execute(returns_q, {"today": today}).fetchone()
         ret_count, ret_total = rr if rr else (0,0)
@@ -312,8 +312,8 @@ class WhatsAppTools:
     def _gen_daily_sales(self) -> str:
         today = date.today().isoformat()
         q = text("""
-            SELECT COUNT(id), COALESCE(SUM(total_amount),0), COALESCE(SUM(paid_amount),0)
-            FROM sales_invoices WHERE DATE(created_at) = :today
+            SELECT COUNT(invoice_id), COALESCE(SUM(total_amount),0), COALESCE(SUM(paid_amount),0)
+            FROM sales_invoices WHERE DATE(invoice_date) = :today
         """)
         row = self.db.execute(q, {"today": today}).fetchone()
         cnt, total, paid = row if row else (0,0,0)
@@ -348,7 +348,7 @@ class WhatsAppTools:
             FROM sales_invoice_items sii
             JOIN products p ON p.product_id = sii.product_id
             JOIN sales_invoices si ON si.invoice_id = sii.invoice_id
-            WHERE si.created_at >= CURRENT_DATE - INTERVAL '30 days'
+            WHERE si.invoice_date >= CURRENT_DATE - INTERVAL '30 days'
             GROUP BY p.product_name ORDER BY rev DESC LIMIT 5
         """)
         rows = self.db.execute(q).fetchall()
@@ -389,7 +389,7 @@ class WhatsAppTools:
 
     def _gen_customer_balances(self) -> str:
         q = text("""
-            SELECT name, current_balance FROM customers
+            SELECT customer_name, current_balance FROM customers
             WHERE current_balance > 0 ORDER BY current_balance DESC LIMIT 10
         """)
         rows = self.db.execute(q).fetchall()
@@ -400,7 +400,7 @@ class WhatsAppTools:
 
     def _gen_supplier_balances(self) -> str:
         q = text("""
-            SELECT name, current_balance FROM suppliers
+            SELECT supplier_name, current_balance FROM suppliers
             WHERE current_balance > 0 ORDER BY current_balance DESC LIMIT 10
         """)
         rows = self.db.execute(q).fetchall()
@@ -430,10 +430,10 @@ class WhatsAppTools:
 
     def _gen_expense_by_category(self) -> str:
         q = text("""
-            SELECT category, SUM(amount) as total
+            SELECT expense_category, SUM(amount) as total
             FROM expenses
             WHERE expense_date >= CURRENT_DATE - INTERVAL '30 days'
-            GROUP BY category ORDER BY total DESC
+            GROUP BY expense_category ORDER BY total DESC
         """)
         rows = self.db.execute(q).fetchall()
         lines = [f"\U0001f4b8 المصروفات حسب الفئة (30 يوم)"]
@@ -457,7 +457,7 @@ class WhatsAppTools:
             JOIN inventory_cache ic ON ic.product_id = p.product_id
             LEFT JOIN sales_invoice_items sii ON sii.product_id = p.product_id
             LEFT JOIN sales_invoices si ON si.invoice_id = sii.invoice_id
-                AND si.created_at >= CURRENT_DATE - INTERVAL '30 days'
+                AND si.invoice_date >= CURRENT_DATE - INTERVAL '30 days'
             GROUP BY p.product_name
             HAVING COALESCE(SUM(ic.cached_quantity),0) > 0
                AND COUNT(si.invoice_id) = 0
@@ -476,7 +476,7 @@ class WhatsAppTools:
                 COALESCE(SUM(CASE WHEN transaction_type='sale' THEN quantity ELSE 0 END),0) as sold,
                 COALESCE(SUM(CASE WHEN transaction_type='return' THEN quantity ELSE 0 END),0) as returned
             FROM inventory_transactions
-            WHERE DATE(created_at) = CURRENT_DATE
+            WHERE DATE(invoice_date) = CURRENT_DATE
         """)
         row = self.db.execute(q).fetchone()
         purchased, sold, returned = row if row else (0,0,0)

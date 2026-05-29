@@ -87,7 +87,7 @@ class WorkflowTools:
         if not customer_id:
             return ""
         row = self.db.execute(
-            text("SELECT phone FROM customers WHERE id = :cid"),
+            text("SELECT phone_number FROM customers WHERE customer_id = :cid"),
             {"cid": customer_id},
         ).fetchone()
         return (row[0] or "").strip() if row else ""
@@ -96,7 +96,7 @@ class WorkflowTools:
         if not customer_id:
             return "عميل"
         row = self.db.execute(
-            text("SELECT name FROM customers WHERE id = :cid"),
+            text("SELECT customer_name FROM customers WHERE customer_id = :cid"),
             {"cid": customer_id},
         ).fetchone()
         return row[0] if row else f"عميل #{customer_id}"
