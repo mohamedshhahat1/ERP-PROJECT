@@ -170,16 +170,56 @@ def cancel_sale(
     current_user: User = Depends(require_permission("sales:write")),
     db: Session = Depends(get_db),
 ):
-    """Cancel a sales invoice. Only unpaid invoices can be cancelled."""
+    """Cancel a sales invoice. Only unpaid/partial invoices can be cancelled.
+    Reverses inventory, ledger entries, cash transactions, and customer balance.
+    """
+    from app.services.inventory_service import InventoryService
+    from app.services.ledger_service import LedgerService, ACCOUNT_CODES
+    from app.models.accounting import LedgerEntry
+    from app.models.payments import CashTransaction
+    from app.models.customers import Customer
+
     invoice = db.query(SalesInvoice).filter(SalesInvoice.invoice_id == invoice_id).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Sales invoice not found")
     if invoice.payment_status == "paid":
         raise HTTPException(status_code=400, detail="Cannot cancel a fully paid invoice. Process a return instead.")
-    if hasattr(invoice, 'status') and invoice.status == "cancelled":
+    if invoice.payment_status == "cancelled":
         raise HTTPException(status_code=400, detail="Invoice is already cancelled.")
 
-    # Mark as cancelled
+    inventory_service = InventoryService(db)
+
+    # 1. Restore inventory for each item
+    items = db.query(SalesInvoiceItem).filter(SalesInvoiceItem.invoice_id == invoice_id).all()
+    for item in items:
+        inventory_service.record_return(
+            product_id=item.product_id,
+            warehouse_id=invoice.warehouse_id,
+            quantity=item.sold_quantity,
+            unit_type=item.unit_type,
+            cost_per_unit=item.cost_at_sale,
+            reference_id=invoice_id,
+        )
+
+    # 2. Reverse ledger entries for this invoice
+    db.query(LedgerEntry).filter(
+        LedgerEntry.entity_type == "sales_invoice",
+        LedgerEntry.entity_id == invoice_id,
+    ).delete()
+
+    # 3. Reverse cash transactions
+    db.query(CashTransaction).filter(
+        CashTransaction.entity_type == "sales_invoice",
+        CashTransaction.entity_id == invoice_id,
+    ).delete()
+
+    # 4. Reverse customer balance if credit invoice
+    if invoice.customer_id and invoice.remaining_amount > 0:
+        customer = db.query(Customer).filter(Customer.customer_id == invoice.customer_id).first()
+        if customer:
+            customer.current_balance -= invoice.remaining_amount
+
+    # 5. Mark as cancelled
     invoice.payment_status = "cancelled"
     invoice.notes = f"{invoice.notes or ''}\n[CANCELLED] {data.reason or ''}".strip()
     db.commit()

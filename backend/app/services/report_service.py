@@ -8,7 +8,7 @@ from app.models.customers import Customer
 from app.models.suppliers import Supplier
 from app.models.products import Product
 from app.models.inventory import InventoryCache, InventoryTransaction
-from app.models.payments import CashTransaction
+from app.models.payments import CashTransaction, CustomerPayment
 from app.models.expenses import Expense
 from app.models.waste import Waste
 from app.models.warehouses import Warehouse
@@ -683,10 +683,9 @@ class ReportService:
             SalesInvoice.customer_id == customer_id
         ).order_by(SalesInvoice.invoice_date.desc()).limit(limit).all()
 
-        payments = self.db.query(CashTransaction).filter(
-            CashTransaction.entity_type == "customer",
-            CashTransaction.entity_id == customer_id,
-        ).order_by(CashTransaction.transaction_date.desc()).limit(limit).all()
+        payments = self.db.query(CustomerPayment).filter(
+            CustomerPayment.customer_id == customer_id,
+        ).order_by(CustomerPayment.payment_date.desc()).limit(limit).all()
 
         invoice_items = [
             {
@@ -702,9 +701,9 @@ class ReportService:
         payment_items = [
             {
                 "type": "payment",
-                "date": str(p.transaction_date),
-                "reference": p.reference_number or "",
-                "amount": str(p.amount),
+                "date": str(p.payment_date),
+                "reference": p.notes or "",
+                "amount": str(p.payment_amount),
                 "status": "completed",
             }
             for p in payments

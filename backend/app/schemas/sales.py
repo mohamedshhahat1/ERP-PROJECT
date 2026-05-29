@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from decimal import Decimal
 from datetime import datetime
 
@@ -25,7 +25,7 @@ class SalesInvoiceCreate(BaseModel):
     paid_amount: Decimal = Decimal("0")
     warehouse_notes: str | None = None
     notes: str | None = None
-    items: list[SalesItemCreate]
+    items: list[SalesItemCreate] = Field(..., min_length=1)
 
 
 class SalesReturnItemCreate(BaseModel):

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from decimal import Decimal
 from datetime import datetime
 
@@ -17,7 +17,7 @@ class PurchaseInvoiceCreate(BaseModel):
     unit_type: str = "meter"
     paid_amount: Decimal = Decimal("0")
     notes: str | None = None
-    items: list[PurchaseItemCreate]
+    items: list[PurchaseItemCreate] = Field(..., min_length=1)
 
 
 class PurchaseInvoiceResponse(BaseModel):
