@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.sales import SalesInvoiceCreate, SalesInvoiceResponse, SalesReturnCreate, SalesReturnResponse
@@ -6,7 +6,7 @@ from app.services.sales_service import SalesService
 from app.core.deps import require_permission
 from app.models.users import User
 from app.models.payments import CustomerPayment
-from app.models.sales import SalesInvoiceItem, SalesReturnItem, SalesReturn
+from app.models.sales import SalesInvoice, SalesInvoiceItem, SalesReturnItem, SalesReturn
 from app.models.products import Product
 from pydantic import BaseModel
 from decimal import Decimal
@@ -132,3 +132,56 @@ def create_return(invoice_id: int, data: SalesReturnCreate, current_user: User =
 def get_returns(invoice_id: int, current_user: User = Depends(require_permission("sales:read")), db: Session = Depends(get_db)):
     service = SalesService(db)
     return service.repo.get_returns_for_invoice(invoice_id)
+
+
+class SalesInvoiceUpdate(BaseModel):
+    notes: str | None = None
+    warehouse_notes: str | None = None
+
+
+@router.put("/{invoice_id}", response_model=SalesInvoiceResponse)
+def update_sale(
+    invoice_id: int,
+    data: SalesInvoiceUpdate,
+    current_user: User = Depends(require_permission("sales:write")),
+    db: Session = Depends(get_db),
+):
+    """Update editable fields on a sales invoice (notes only — amounts are immutable)."""
+    invoice = db.query(SalesInvoice).filter(SalesInvoice.invoice_id == invoice_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Sales invoice not found")
+    if data.notes is not None:
+        invoice.notes = data.notes
+    if data.warehouse_notes is not None:
+        invoice.warehouse_notes = data.warehouse_notes
+    db.commit()
+    db.refresh(invoice)
+    return invoice
+
+
+class CancelRequest(BaseModel):
+    reason: str | None = None
+
+
+@router.post("/{invoice_id}/cancel", response_model=SalesInvoiceResponse)
+def cancel_sale(
+    invoice_id: int,
+    data: CancelRequest = CancelRequest(),
+    current_user: User = Depends(require_permission("sales:write")),
+    db: Session = Depends(get_db),
+):
+    """Cancel a sales invoice. Only unpaid invoices can be cancelled."""
+    invoice = db.query(SalesInvoice).filter(SalesInvoice.invoice_id == invoice_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Sales invoice not found")
+    if invoice.payment_status == "paid":
+        raise HTTPException(status_code=400, detail="Cannot cancel a fully paid invoice. Process a return instead.")
+    if hasattr(invoice, 'status') and invoice.status == "cancelled":
+        raise HTTPException(status_code=400, detail="Invoice is already cancelled.")
+
+    # Mark as cancelled
+    invoice.payment_status = "cancelled"
+    invoice.notes = f"{invoice.notes or ''}\n[CANCELLED] {data.reason or ''}".strip()
+    db.commit()
+    db.refresh(invoice)
+    return invoice

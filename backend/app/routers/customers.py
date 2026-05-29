@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.customers import CustomerCreate, CustomerUpdate, CustomerResponse
 from app.services.customer_service import CustomerService
 from app.core.deps import require_permission
 from app.models.users import User
+from app.models.customers import Customer
+from app.models.sales import SalesInvoice
 
 router = APIRouter()
 
@@ -31,3 +33,20 @@ def create_customer(data: CustomerCreate, current_user: User = Depends(require_p
 def update_customer(customer_id: int, data: CustomerUpdate, current_user: User = Depends(require_permission("customers:write")), db: Session = Depends(get_db)):
     service = CustomerService(db)
     return service.update(customer_id, data)
+
+
+@router.delete("/{customer_id}", status_code=204)
+def delete_customer(customer_id: int, current_user: User = Depends(require_permission("customers:write")), db: Session = Depends(get_db)):
+    """Delete a customer. Only allowed if they have no associated invoices."""
+    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    # Prevent deletion if customer has invoices
+    has_invoices = db.query(SalesInvoice).filter(SalesInvoice.customer_id == customer_id).first()
+    if has_invoices:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete customer with existing invoices. Deactivate instead.",
+        )
+    db.delete(customer)
+    db.commit()
