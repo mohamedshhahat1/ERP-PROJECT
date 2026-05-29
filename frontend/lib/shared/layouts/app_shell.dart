@@ -138,6 +138,42 @@ class AppShell extends ConsumerWidget {
                       ),
                       const SizedBox(width: 16),
                       const CircleAvatar(radius: 16, backgroundColor: AppColors.primary, child: Text('A', style: TextStyle(color: Colors.white, fontSize: 14))),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              title: const Row(
+                                children: [
+                                  Icon(Icons.logout, color: AppColors.error),
+                                  SizedBox(width: 8),
+                                  Text('Logout'),
+                                ],
+                              ),
+                              content: const Text('Are you sure you want to logout?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    ref.read(authProvider.notifier).logout();
+                                  },
+                                  style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                                  child: const Text('Logout'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.logout),
+                        tooltip: 'Logout',
+                        style: IconButton.styleFrom(foregroundColor: AppColors.error),
+                      ),
                     ],
                   ),
                 ),
