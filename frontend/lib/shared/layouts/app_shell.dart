@@ -62,13 +62,6 @@ class AppShell extends ConsumerWidget {
                       _navItem(context, ref, '/whatsapp', Icons.chat, 'WhatsApp', collapsed, highlight: true),
                       const Divider(height: 24),
                       _navItem(context, ref, '/ai', Icons.smart_toy_rounded, 'AI Assistant', collapsed, highlight: true),
-                      if (userRole == 'admin') ...[                        const Divider(height: 24),
-                        _navItem(context, ref, '/ai-audit', Icons.admin_panel_settings_rounded, 'AI Audit', collapsed, highlight: true),
-                        _navItem(context, ref, '/ai-analytics', Icons.insights_rounded, 'AI Analytics', collapsed, highlight: true),
-                        _navItem(context, ref, '/accounting', Icons.menu_book_rounded, 'Accounting', collapsed),
-                        _navItem(context, ref, '/users', Icons.manage_accounts_rounded, 'Users', collapsed),
-                        _navItem(context, ref, '/settings', Icons.settings_rounded, 'Settings', collapsed),
-                      ],
                     ],
                   ),
                 ),
@@ -130,42 +123,85 @@ class AppShell extends ConsumerWidget {
                         icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
                       ),
                       const SizedBox(width: 16),
-                      const CircleAvatar(radius: 16, backgroundColor: AppColors.primary, child: Text('A', style: TextStyle(color: Colors.white, fontSize: 14))),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              title: const Row(
+                      PopupMenuButton<String>(
+                        offset: const Offset(0, 50),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: AppColors.primary,
+                              child: Text(
+                                (ref.watch(authProvider).token?.fullName ?? 'U').substring(0, 1).toUpperCase(),
+                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            if (!collapsed) ...[
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_drop_down, size: 20),
+                            ],
+                          ],
+                        ),
+                        itemBuilder: (ctx) {
+                          final token = ref.read(authProvider).token;
+                          final name = token?.fullName ?? 'User';
+                          final role = token?.role ?? '';
+                          return [
+                            // User info header
+                            PopupMenuItem<String>(
+                              enabled: false,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.logout, color: AppColors.error),
-                                  SizedBox(width: 8),
-                                  Text('Logout'),
+                                  Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                                  const SizedBox(height: 2),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(role, style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w500)),
+                                  ),
                                 ],
                               ),
-                              content: const Text('Are you sure you want to logout?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: const Text('Cancel'),
-                                ),
-                                FilledButton(
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    ref.read(authProvider.notifier).logout();
-                                  },
-                                  style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-                                  child: const Text('Logout'),
-                                ),
-                              ],
                             ),
-                          );
+                            const PopupMenuDivider(),
+                            // Menu items
+                            const PopupMenuItem(value: '/settings', child: ListTile(dense: true, leading: Icon(Icons.settings_rounded, size: 20), title: Text('Settings', style: TextStyle(fontSize: 13)))),
+                            if (role == 'admin') ...[
+                              const PopupMenuItem(value: '/accounting', child: ListTile(dense: true, leading: Icon(Icons.menu_book_rounded, size: 20), title: Text('Accounting', style: TextStyle(fontSize: 13)))),
+                              const PopupMenuItem(value: '/users', child: ListTile(dense: true, leading: Icon(Icons.manage_accounts_rounded, size: 20), title: Text('Users', style: TextStyle(fontSize: 13)))),
+                              const PopupMenuItem(value: '/ai-audit', child: ListTile(dense: true, leading: Icon(Icons.admin_panel_settings_rounded, size: 20), title: Text('AI Audit', style: TextStyle(fontSize: 13)))),
+                              const PopupMenuItem(value: '/ai-analytics', child: ListTile(dense: true, leading: Icon(Icons.insights_rounded, size: 20), title: Text('AI Analytics', style: TextStyle(fontSize: 13)))),
+                            ],
+                            const PopupMenuDivider(),
+                            const PopupMenuItem(value: 'logout', child: ListTile(dense: true, leading: Icon(Icons.logout, size: 20, color: AppColors.error), title: Text('Logout', style: TextStyle(fontSize: 13, color: AppColors.error)))),
+                          ];
                         },
-                        icon: const Icon(Icons.logout),
-                        tooltip: 'Logout',
-                        style: IconButton.styleFrom(foregroundColor: AppColors.error),
+                        onSelected: (value) {
+                          if (value == 'logout') {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: const Row(children: [Icon(Icons.logout, color: AppColors.error), SizedBox(width: 8), Text('Logout')]),
+                                content: const Text('Are you sure you want to logout?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                                  FilledButton(
+                                    onPressed: () { Navigator.pop(ctx); ref.read(authProvider.notifier).logout(); },
+                                    style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            context.go(value);
+                          }
+                        },
                       ),
                     ],
                   ),
