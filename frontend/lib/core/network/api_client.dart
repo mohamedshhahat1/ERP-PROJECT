@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,13 +12,22 @@ const _storage = FlutterSecureStorage();
 /// Whether a token refresh is currently in progress (prevents concurrent refreshes).
 bool _isRefreshing = false;
 
+/// Maximum number of retries for transient network errors.
+const _maxRetries = 3;
+
+/// HTTP methods that are safe to retry (idempotent).
+const _retryableMethods = {'GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'};
+
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
     baseUrl: _baseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
+    connectTimeout: const Duration(seconds: 15),
+    receiveTimeout: const Duration(seconds: 15),
     headers: {'Content-Type': 'application/json'},
   ));
+
+  // Retry interceptor for transient failures (timeouts, connection errors)
+  dio.interceptors.add(_RetryInterceptor(dio));
 
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) async {
@@ -72,6 +83,60 @@ final dioProvider = Provider<Dio>((ref) {
 
   return dio;
 });
+
+/// Retry interceptor with exponential backoff for transient network failures.
+class _RetryInterceptor extends Interceptor {
+  final Dio _dio;
+  _RetryInterceptor(this._dio);
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final retryCount = err.requestOptions.extra['_retryCount'] ?? 0;
+
+    // Only retry on transient errors for idempotent methods
+    if (retryCount < _maxRetries && _shouldRetry(err)) {
+      final delay = Duration(milliseconds: _exponentialDelay(retryCount));
+      await Future.delayed(delay);
+
+      err.requestOptions.extra['_retryCount'] = retryCount + 1;
+      try {
+        final response = await _dio.fetch(err.requestOptions);
+        return handler.resolve(response);
+      } catch (e) {
+        // Fall through to next interceptor
+      }
+    }
+
+    handler.next(err);
+  }
+
+  bool _shouldRetry(DioException err) {
+    // Only retry idempotent methods (GET/PUT/DELETE/HEAD/OPTIONS)
+    final method = err.requestOptions.method.toUpperCase();
+    if (!_retryableMethods.contains(method)) return false;
+
+    // Retry on connection errors, timeouts, and 5xx server errors
+    switch (err.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+        return true;
+      case DioExceptionType.badResponse:
+        final status = err.response?.statusCode ?? 0;
+        return status >= 500 && status < 600;
+      default:
+        return false;
+    }
+  }
+
+  int _exponentialDelay(int retryCount) {
+    // 500ms, 1000ms, 2000ms with ±20% jitter
+    final base = 500 * pow(2, retryCount).toInt();
+    final jitter = (base * 0.2 * (Random().nextDouble() * 2 - 1)).toInt();
+    return base + jitter;
+  }
+}
 
 /// Attempt to refresh the access token using the current (possibly near-expiry) token.
 Future<bool> _attemptTokenRefresh(Dio dio) async {

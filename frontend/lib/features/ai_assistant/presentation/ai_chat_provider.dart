@@ -44,10 +44,18 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
     ],
   ));
 
+  /// Maximum allowed input length (characters).
+  static const int maxInputLength = 4000;
+
   Future<void> sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
-    final userMsg = AIMessage(role: 'user', content: text);
+    // Enforce input length limit to prevent API abuse/timeouts
+    final trimmedText = text.length > maxInputLength
+        ? text.substring(0, maxInputLength)
+        : text;
+
+    final userMsg = AIMessage(role: 'user', content: trimmedText);
     final assistantMsg = AIMessage(role: 'assistant', content: '', isStreaming: true);
 
     state = state.copyWith(
