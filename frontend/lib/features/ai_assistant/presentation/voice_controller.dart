@@ -20,6 +20,7 @@ class VoiceChatState {
   final String? errorMessage;
   final bool isStreaming;
   final bool shouldStopAudio;
+  final double micVolume; // 0.0 to 1.0 — current microphone amplitude
 
   VoiceChatState({
     this.voiceState = VoiceState.idle,
@@ -32,6 +33,7 @@ class VoiceChatState {
     this.errorMessage,
     this.isStreaming = false,
     this.shouldStopAudio = false,
+    this.micVolume = 0.0,
   });
 
   VoiceChatState copyWith({
@@ -45,6 +47,7 @@ class VoiceChatState {
     String? errorMessage,
     bool? isStreaming,
     bool? shouldStopAudio,
+    double? micVolume,
   }) {
     return VoiceChatState(
       voiceState: voiceState ?? this.voiceState,
@@ -57,6 +60,7 @@ class VoiceChatState {
       errorMessage: errorMessage,
       isStreaming: isStreaming ?? this.isStreaming,
       shouldStopAudio: shouldStopAudio ?? this.shouldStopAudio,
+      micVolume: micVolume ?? this.micVolume,
     );
   }
 }
@@ -69,6 +73,7 @@ class VoiceChatNotifier extends StateNotifier<VoiceChatState> {
   final VoiceService _voiceService;
   StreamSubscription? _eventSub;
   StreamSubscription? _audioStreamSub;
+  Timer? _amplitudeTimer;
   final AudioRecorder _recorder = AudioRecorder();
 
   VoiceChatNotifier(this._voiceService) : super(VoiceChatState(
@@ -129,10 +134,26 @@ class VoiceChatNotifier extends StateNotifier<VoiceChatState> {
       isStreaming: true,
       isConnected: true,
     );
+
+    // Start polling microphone amplitude for waveform visualization
+    _amplitudeTimer?.cancel();
+    _amplitudeTimer = Timer.periodic(const Duration(milliseconds: 80), (_) async {
+      if (!mounted || !state.isStreaming) return;
+      try {
+        final amp = await _recorder.getAmplitude();
+        // amp.current is in dBFS (negative, -160 to 0). Normalize to 0.0-1.0
+        final normalized = ((amp.current + 50) / 50).clamp(0.0, 1.0);
+        if (mounted) {
+          state = state.copyWith(micVolume: normalized);
+        }
+      } catch (_) {}
+    });
   }
 
   /// Stop live streaming and trigger AI processing
   Future<void> stopStreaming() async {
+    _amplitudeTimer?.cancel();
+    _amplitudeTimer = null;
     await _audioStreamSub?.cancel();
     _audioStreamSub = null;
     await _recorder.stop();
@@ -142,6 +163,7 @@ class VoiceChatNotifier extends StateNotifier<VoiceChatState> {
     state = state.copyWith(
       voiceState: VoiceState.processing,
       isStreaming: false,
+      micVolume: 0.0,
     );
   }
 

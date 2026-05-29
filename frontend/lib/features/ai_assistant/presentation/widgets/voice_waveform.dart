@@ -5,12 +5,16 @@ class VoiceWaveform extends StatefulWidget {
   final bool isActive;
   final Color color;
   final double height;
+  /// Current mic volume level (0.0 to 1.0). When provided, waveform
+  /// responds to actual microphone input instead of random animation.
+  final double volume;
 
   const VoiceWaveform({
     super.key,
     required this.isActive,
     this.color = Colors.blue,
     this.height = 60,
+    this.volume = 0.0,
   });
 
   @override
@@ -27,7 +31,7 @@ class _VoiceWaveformState extends State<VoiceWaveform> with TickerProviderStateM
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 80),
     );
     _controller.addListener(_updateAmplitudes);
     if (widget.isActive) _controller.repeat();
@@ -51,8 +55,13 @@ class _VoiceWaveformState extends State<VoiceWaveform> with TickerProviderStateM
   void _updateAmplitudes() {
     if (!mounted) return;
     setState(() {
+      final vol = widget.volume.clamp(0.0, 1.0);
       for (int i = 0; i < _amplitudes.length; i++) {
-        _amplitudes[i] = 0.15 + _random.nextDouble() * 0.85;
+        // Base amplitude from actual volume + small random variation for natural look
+        final jitter = (_random.nextDouble() - 0.5) * 0.2;
+        // Center bars are taller, edges are shorter (natural waveform shape)
+        final centerFactor = 1.0 - ((i - _amplitudes.length / 2).abs() / (_amplitudes.length / 2)) * 0.4;
+        _amplitudes[i] = (0.1 + vol * 0.9 * centerFactor + jitter).clamp(0.05, 1.0);
       }
     });
   }
@@ -72,7 +81,7 @@ class _VoiceWaveformState extends State<VoiceWaveform> with TickerProviderStateM
         crossAxisAlignment: CrossAxisAlignment.center,
         children: List.generate(_amplitudes.length, (i) {
           return AnimatedContainer(
-            duration: const Duration(milliseconds: 80),
+            duration: const Duration(milliseconds: 60),
             width: 3,
             height: widget.height * _amplitudes[i],
             margin: const EdgeInsets.symmetric(horizontal: 1.5),

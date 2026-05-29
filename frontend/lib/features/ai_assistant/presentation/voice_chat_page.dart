@@ -319,7 +319,7 @@ class _VoiceChatPageState extends ConsumerState<VoiceChatPage> with TickerProvid
           if (voiceState.voiceState == VoiceState.listening || voiceState.isStreaming)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: VoiceWaveform(isActive: true, color: Colors.red, height: 50),
+              child: VoiceWaveform(isActive: true, color: Colors.red, height: 50, volume: voiceState.micVolume),
             )
           else if (voiceState.voiceState == VoiceState.speaking)
             Padding(
