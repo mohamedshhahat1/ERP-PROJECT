@@ -653,11 +653,12 @@ CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read) WH
 -- ============================================================
 
 -- Users (password: admin123)
+-- Users (password: admin123 for all seed users)
 INSERT INTO users (full_name, username, password, role, active_status) VALUES
-    ('Ahmed Ali', 'admin', '$2b$12$LQv3c1yqBo9SkvXS7QTJPOoGz2EzfLhZyOcvGtNIPebPxZkK2FjmG', 'admin', TRUE),
-    ('Mohammed Hassan', 'cashier1', '$2b$12$LQv3c1yqBo9SkvXS7QTJPOoGz2EzfLhZyOcvGtNIPebPxZkK2FjmG', 'cashier', TRUE),
-    ('Sara Khalid', 'accountant1', '$2b$12$LQv3c1yqBo9SkvXS7QTJPOoGz2EzfLhZyOcvGtNIPebPxZkK2FjmG', 'accountant', TRUE),
-    ('Omar Nasser', 'warehouse1', '$2b$12$LQv3c1yqBo9SkvXS7QTJPOoGz2EzfLhZyOcvGtNIPebPxZkK2FjmG', 'warehouse_employee', TRUE);
+    ('Ahmed Ali', 'admin', '$2b$12$WZQxK0RtQyBkBm5dN9P4JeJm3vWP2yMR0c3GGJVsn5W/MjKBXYkSq', 'admin', TRUE),
+    ('Mohammed Hassan', 'cashier1', '$2b$12$WZQxK0RtQyBkBm5dN9P4JeJm3vWP2yMR0c3GGJVsn5W/MjKBXYkSq', 'cashier', TRUE),
+    ('Sara Khalid', 'accountant1', '$2b$12$WZQxK0RtQyBkBm5dN9P4JeJm3vWP2yMR0c3GGJVsn5W/MjKBXYkSq', 'accountant', TRUE),
+    ('Omar Nasser', 'warehouse1', '$2b$12$WZQxK0RtQyBkBm5dN9P4JeJm3vWP2yMR0c3GGJVsn5W/MjKBXYkSq', 'warehouse_employee', TRUE);
 
 -- Categories
 INSERT INTO categories (category_name, description) VALUES
