@@ -5,6 +5,7 @@ import '../../../core/utils/app_refresh.dart';
 import '../../../core/utils/print_helper.dart';
 import '../data/products_repository.dart';
 import 'products_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class ProductDetailDrawer extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -41,7 +42,7 @@ class _ProductDetailDrawerState extends ConsumerState<ProductDetailDrawer> with 
       final result = await repo.aiChat(question);
       setState(() => _aiInsight = result['response']?.toString() ?? 'No insight available');
     } catch (e) {
-      setState(() => _aiInsight = 'Error: $e');
+      setState(() => _aiInsight = getErrorMessage(e));
     } finally {
       setState(() => _aiLoading = false);
     }
@@ -208,7 +209,7 @@ class _ProductDetailDrawerState extends ConsumerState<ProductDetailDrawer> with 
         widget.onClose();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
     }
   }
 
@@ -238,7 +239,7 @@ class _ProductDetailDrawerState extends ConsumerState<ProductDetailDrawer> with 
         widget.onClose();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
     }
   }
 
@@ -327,7 +328,7 @@ class _ProductDetailDrawerState extends ConsumerState<ProductDetailDrawer> with 
             if (ctx.mounted) Navigator.pop(ctx);
             ref.invalidate(stockProvider);
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Stock ${direction == "IN" ? "added" : "removed"} successfully')));
-          } catch (e) { if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e'))); }
+          } catch (e) { if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(getErrorMessage(e)))); }
         }, child: const Text('Confirm')),
       ],
     )));
@@ -387,7 +388,7 @@ class _ProductDetailDrawerState extends ConsumerState<ProductDetailDrawer> with 
               if (ctx.mounted) Navigator.pop(ctx);
               ref.invalidate(stockProvider);
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Transferred ${qty.toStringAsFixed(1)} ${p.baseUnit} from WH#$fromWarehouse to WH#$toWarehouse')));
-            } catch (e) { if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e'))); }
+            } catch (e) { if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(getErrorMessage(e)))); }
           }, child: const Text('Transfer')),
         ],
       );
@@ -421,7 +422,7 @@ class _ProductDetailDrawerState extends ConsumerState<ProductDetailDrawer> with 
               if (ctx.mounted) Navigator.pop(ctx);
               invalidateAfterProductChange(ref);
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Price updated successfully')));
-            } catch (e) { if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e'))); }
+            } catch (e) { if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(getErrorMessage(e)))); }
           }, child: const Text('Save')),
         ],
       );

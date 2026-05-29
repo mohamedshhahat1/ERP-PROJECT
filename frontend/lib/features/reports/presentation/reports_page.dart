@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/print_helper.dart';
 import '../../whatsapp/data/whatsapp_repository.dart';
 import 'reports_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class ReportsPage extends ConsumerStatefulWidget {
   const ReportsPage({super.key});
@@ -136,7 +137,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
     } catch (e) {
       if (mounted)
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+            .showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
     }
   }
 
@@ -751,7 +752,7 @@ class _DailyOperationsReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -871,7 +872,7 @@ class _DailySalesReport extends ConsumerWidget {
                       .toList());
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -972,7 +973,7 @@ class _SalesByPeriodReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1055,7 +1056,7 @@ class _TopProductsReport extends ConsumerWidget {
                       .toList());
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1159,7 +1160,7 @@ class _ProductPerformanceReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1248,7 +1249,7 @@ class _InventoryValuationReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1359,7 +1360,7 @@ class _LowStockReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1433,7 +1434,7 @@ class _StockMovementReport extends ConsumerWidget {
                       .toList());
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1536,7 +1537,7 @@ class _DeadStockReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1664,7 +1665,7 @@ class _ProfitLossReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1761,7 +1762,7 @@ class _MonthlyProfitReport extends ConsumerWidget {
                       .toList());
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1863,7 +1864,7 @@ class _CashFlowReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -1976,7 +1977,7 @@ class _CustomerBalancesReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -2057,7 +2058,7 @@ class _SupplierBalancesReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -2145,7 +2146,7 @@ class _ExpenseByCategoryReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),
@@ -2315,7 +2316,7 @@ class _CustomerSegmentationReport extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => Text(getErrorMessage(e)),
           ),
         ],
       ),

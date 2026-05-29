@@ -6,6 +6,7 @@ import '../../../core/widgets/skeleton_loader.dart';
 import '../data/customers_repository.dart';
 import 'customers_provider.dart';
 import 'customer_form_dialog.dart';
+import '../../../core/utils/error_utils.dart';
 
 class CustomersPage extends ConsumerWidget {
   const CustomersPage({super.key});
@@ -52,7 +53,7 @@ class CustomersPage extends ConsumerWidget {
                   itemCount: 8, padding: const EdgeInsets.all(16),
                   itemBuilder: (_, __) => const Padding(padding: EdgeInsets.only(bottom: 12), child: SkeletonLoader(height: 48)),
                 ),
-                error: (err, _) => Center(child: Text('Error: $err')),
+                error: (err, _) => Center(child: Text(getErrorMessage(err))),
                 data: (customers) {
                   if (customers.isEmpty) {
                     return const EmptyState(icon: Icons.people, title: 'No customers yet');

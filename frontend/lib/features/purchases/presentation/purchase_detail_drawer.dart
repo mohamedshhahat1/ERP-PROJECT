@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/print_helper.dart';
 import '../../../core/widgets/validation_error_banner.dart';
 import '../data/purchases_repository.dart';
+import '../../../core/utils/error_utils.dart';
 
 class PurchaseDetailDrawer extends ConsumerStatefulWidget {
   final PurchaseInvoiceModel invoice;
@@ -685,7 +686,7 @@ class _PurchaseDetailDrawerState extends ConsumerState<PurchaseDetailDrawer> wit
       final resp = await repo.aiChat(question);
       setState(() => _aiResponse = resp['response'] as String?);
     } catch (e) {
-      setState(() => _aiResponse = 'Error: $e');
+      setState(() => _aiResponse = getErrorMessage(e));
     } finally {
       setState(() => _aiLoading = false);
     }

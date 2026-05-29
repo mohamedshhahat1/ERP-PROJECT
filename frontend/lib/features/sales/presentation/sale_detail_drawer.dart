@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/print_helper.dart';
 import '../../../core/widgets/validation_error_banner.dart';
 import '../data/sales_repository.dart';
+import '../../../core/utils/error_utils.dart';
 
 class SaleDetailDrawer extends ConsumerStatefulWidget {
   final SalesInvoiceModel invoice;
@@ -710,7 +711,7 @@ class _SaleDetailDrawerState extends ConsumerState<SaleDetailDrawer> with Single
                     }
                   } catch (e) {
                     if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
+                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
                     }
                   }
                 },
@@ -760,7 +761,7 @@ class _SaleDetailDrawerState extends ConsumerState<SaleDetailDrawer> with Single
             }
           } catch (e) {
             if (ctx.mounted) {
-              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
+              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
             }
           }
         },
@@ -834,7 +835,7 @@ class _SaleDetailDrawerState extends ConsumerState<SaleDetailDrawer> with Single
                 }
               } catch (e) {
                 if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
                 }
               }
             },
@@ -854,7 +855,7 @@ class _SaleDetailDrawerState extends ConsumerState<SaleDetailDrawer> with Single
       final resp = await repo.aiChat(question);
       setState(() => _aiResponse = resp);
     } catch (e) {
-      setState(() => _aiResponse = 'Error: $e');
+      setState(() => _aiResponse = getErrorMessage(e));
     } finally {
       setState(() => _aiLoading = false);
     }
@@ -904,7 +905,7 @@ class _SaleDetailDrawerState extends ConsumerState<SaleDetailDrawer> with Single
                 }
               } catch (e) {
                 if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
                 }
               }
             },

@@ -6,6 +6,7 @@ import '../../../core/widgets/kpi_card.dart';
 import '../data/expenses_repository.dart';
 import 'expenses_provider.dart';
 import 'add_expense_dialog.dart';
+import '../../../core/utils/error_utils.dart';
 
 class ExpensesPage extends ConsumerStatefulWidget {
   const ExpensesPage({super.key});
@@ -667,7 +668,7 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete expense: $e'), backgroundColor: AppColors.error),
+            SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
           );
         }
       }

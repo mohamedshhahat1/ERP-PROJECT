@@ -7,6 +7,7 @@ import '../data/inventory_repository.dart';
 import 'inventory_provider.dart';
 import 'inventory_detail_drawer.dart';
 import 'opening_stock_dialog.dart';
+import '../../../core/utils/error_utils.dart';
 
 class InventoryPage extends ConsumerStatefulWidget {
   const InventoryPage({super.key});
@@ -37,7 +38,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
       await refreshInventory(ref);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock refreshed')));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(getErrorMessage(e)), backgroundColor: Colors.red));
     }
   }
 
@@ -240,7 +241,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                         itemCount: 6, padding: const EdgeInsets.all(16),
                         itemBuilder: (_, __) => const Padding(padding: EdgeInsets.only(bottom: 12), child: SkeletonLoader(height: 80)),
                       ),
-                      error: (err, _) => Center(child: Text('Error: $err')),
+                      error: (err, _) => Center(child: Text(getErrorMessage(err))),
                       data: (items) {
                         if (items.isEmpty) {
                           return Center(
@@ -549,7 +550,7 @@ class _TransferDialogState extends State<_TransferDialog> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transfer completed successfully'), backgroundColor: Colors.green));
               }
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(getErrorMessage(e)), backgroundColor: Colors.red));
             } finally {
               if (mounted) setState(() => _loading = false);
             }
@@ -651,7 +652,7 @@ class _AdjustStockDialogState extends State<_AdjustStockDialog> {
                 ));
               }
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(getErrorMessage(e)), backgroundColor: Colors.red));
             } finally {
               if (mounted) setState(() => _loading = false);
             }
@@ -749,7 +750,7 @@ class _AddStockDialogState extends State<_AddStockDialog> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock added successfully'), backgroundColor: Colors.green));
               }
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(getErrorMessage(e)), backgroundColor: Colors.red));
             } finally {
               if (mounted) setState(() => _loading = false);
             }
@@ -855,7 +856,7 @@ class _DeductStockDialogState extends State<_DeductStockDialog> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock deducted successfully'), backgroundColor: Colors.green));
               }
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(getErrorMessage(e)), backgroundColor: Colors.red));
             } finally {
               if (mounted) setState(() => _loading = false);
             }
@@ -1140,7 +1141,7 @@ class _InventoryAiDialogState extends State<_InventoryAiDialog> {
       final result = await repo.aiChat(q);
       setState(() => _response = result['response']?.toString() ?? 'No response');
     } catch (e) {
-      setState(() => _response = 'Error: $e');
+      setState(() => _response = getErrorMessage(e));
     } finally {
       setState(() => _loading = false);
     }

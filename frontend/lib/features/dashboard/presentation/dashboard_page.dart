@@ -9,6 +9,7 @@ import 'widgets/profit_chart.dart';
 import 'widgets/cash_flow_chart.dart';
 import 'widgets/top_products_chart.dart';
 import 'widgets/ai_insights_widget.dart';
+import '../../../core/utils/error_utils.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -43,7 +44,7 @@ class DashboardPage extends ConsumerWidget {
                 children: List.generate(5, (_) => const CardSkeletonLoader()),
               );
             }),
-            error: (err, _) => Text('Error: $err'),
+            error: (err, _) => Text(getErrorMessage(err)),
             data: (s) => LayoutBuilder(builder: (context, constraints) {
               final cols = constraints.maxWidth > 1000 ? 5 : constraints.maxWidth > 600 ? 3 : 2;
               return GridView.count(

@@ -6,6 +6,7 @@ import '../../../core/widgets/skeleton_loader.dart';
 import '../data/suppliers_repository.dart';
 import 'suppliers_provider.dart';
 import 'supplier_form_dialog.dart';
+import '../../../core/utils/error_utils.dart';
 
 class SuppliersPage extends ConsumerWidget {
   const SuppliersPage({super.key});
@@ -52,7 +53,7 @@ class SuppliersPage extends ConsumerWidget {
                   itemCount: 8, padding: const EdgeInsets.all(16),
                   itemBuilder: (_, __) => const Padding(padding: EdgeInsets.only(bottom: 12), child: SkeletonLoader(height: 48)),
                 ),
-                error: (err, _) => Center(child: Text('Error: $err')),
+                error: (err, _) => Center(child: Text(getErrorMessage(err))),
                 data: (suppliers) {
                   if (suppliers.isEmpty) {
                     return const EmptyState(icon: Icons.local_shipping, title: 'No suppliers yet');

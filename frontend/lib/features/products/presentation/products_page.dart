@@ -6,6 +6,7 @@ import '../data/products_repository.dart';
 import 'products_provider.dart';
 import 'product_form_dialog.dart';
 import 'product_detail_drawer.dart';
+import '../../../core/utils/error_utils.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -212,7 +213,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                     ),
                     child: filteredAsync.when(
                       loading: () => ListView.builder(itemCount: 6, padding: const EdgeInsets.all(16), itemBuilder: (_, __) => const Padding(padding: EdgeInsets.only(bottom: 12), child: SkeletonLoader(height: 72))),
-                      error: (err, _) => Center(child: Text('Error: $err')),
+                      error: (err, _) => Center(child: Text(getErrorMessage(err))),
                       data: (products) {
                         if (products.isEmpty) {
                           return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.inventory_2, size: 64, color: isDark ? AppColors.darkTextSecondary : AppColors.textTertiary), const SizedBox(height: 16), Text('No products found', style: TextStyle(fontSize: 18, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary))]));
@@ -334,7 +335,7 @@ class _AiQueryDialogState extends State<_AiQueryDialog> {
       final result = await repo.aiChat(question);
       setState(() => _response = result['response']?.toString() ?? 'No response');
     } catch (e) {
-      setState(() => _response = 'Error: $e');
+      setState(() => _response = getErrorMessage(e));
     } finally {
       setState(() => _loading = false);
     }

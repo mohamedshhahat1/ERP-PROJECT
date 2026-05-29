@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 import '../data/voice_service.dart';
 import '../data/ai_repository.dart';
+import '../../../core/utils/error_utils.dart';
 
 enum VoiceState { idle, listening, processing, toolExecution, speaking }
 
@@ -251,7 +252,7 @@ class VoiceChatNotifier extends StateNotifier<VoiceChatState> {
     } catch (e) {
       state = state.copyWith(
         voiceState: VoiceState.idle,
-        errorMessage: 'Error: ${e.toString().substring(0, 80)}',
+        errorMessage: getErrorMessage(e),
       );
     }
   }

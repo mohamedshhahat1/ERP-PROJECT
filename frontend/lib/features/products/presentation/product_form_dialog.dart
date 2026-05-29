@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_refresh.dart';
 import '../data/products_repository.dart';
 import 'products_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class ProductFormDialog extends ConsumerStatefulWidget {
   final ProductModel? product;
@@ -161,7 +162,7 @@ class _ProductFormDialogState extends ConsumerState<ProductFormDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     } finally {

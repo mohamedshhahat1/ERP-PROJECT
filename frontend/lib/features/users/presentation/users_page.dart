@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/users_repository.dart';
 import 'users_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class UsersPage extends ConsumerStatefulWidget {
   const UsersPage({super.key});
@@ -347,7 +348,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     }
@@ -423,7 +424,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+            SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
           );
         }
       }
@@ -517,7 +518,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(this.context).showSnackBar(
-                      SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
                     );
                   }
                 }

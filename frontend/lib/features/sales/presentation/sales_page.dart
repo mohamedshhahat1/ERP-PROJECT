@@ -11,6 +11,7 @@ import '../data/sales_repository.dart';
 import 'sales_provider.dart';
 import 'create_sale_dialog.dart';
 import 'sale_detail_drawer.dart';
+import '../../../core/utils/error_utils.dart';
 
 class SalesPage extends ConsumerStatefulWidget {
   const SalesPage({super.key});
@@ -384,7 +385,7 @@ class _SalesPageState extends ConsumerState<SalesPage> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx)
-                      .showSnackBar(SnackBar(content: Text('Error: $e')));
+                      .showSnackBar(SnackBar(content: Text(getErrorMessage(e))));
                 }
               }
             },
@@ -832,7 +833,7 @@ class _SalesAiDialogState extends State<_SalesAiDialog> {
       final resp = await repo.aiChat(query);
       if (mounted) setState(() => _response = resp);
     } catch (e) {
-      if (mounted) setState(() => _response = 'Error: $e');
+      if (mounted) setState(() => _response = getErrorMessage(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

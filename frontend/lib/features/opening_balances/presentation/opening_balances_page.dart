@@ -8,6 +8,7 @@ import '../../suppliers/data/suppliers_repository.dart';
 import '../../suppliers/presentation/suppliers_provider.dart';
 import '../data/opening_balance_repository.dart';
 import 'opening_balances_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class OpeningBalancesPage extends ConsumerStatefulWidget {
   const OpeningBalancesPage({super.key});
@@ -141,7 +142,7 @@ class _CustomerOpeningBalanceTabState extends ConsumerState<_CustomerOpeningBala
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -346,7 +347,7 @@ class _SupplierOpeningBalanceTabState extends ConsumerState<_SupplierOpeningBala
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -536,7 +537,7 @@ class _CashOpeningBalanceTabState extends ConsumerState<_CashOpeningBalanceTab> 
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -748,7 +749,7 @@ class _LockStatusWidget extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
                   );
                 }
               }

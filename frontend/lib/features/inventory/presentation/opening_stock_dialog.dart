@@ -6,6 +6,7 @@ import '../../products/data/products_repository.dart';
 import '../../products/presentation/products_provider.dart';
 import '../data/inventory_repository.dart';
 import 'inventory_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class OpeningStockDialog extends ConsumerStatefulWidget {
   const OpeningStockDialog({super.key});
@@ -71,7 +72,7 @@ class _OpeningStockDialogState extends ConsumerState<OpeningStockDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     } finally {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/whatsapp_repository.dart';
 import 'whatsapp_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class WhatsAppPage extends ConsumerStatefulWidget {
   const WhatsAppPage({super.key});
@@ -249,7 +250,7 @@ class _DailyReportSenderState extends ConsumerState<_DailyReportSender> {
         _status = result.containsKey('error') ? 'Error: ${result['error']}' : 'Report sent successfully!';
       });
     } catch (e) {
-      setState(() { _sending = false; _status = 'Error: $e'; });
+      setState(() { _sending = false; _status = getErrorMessage(e); });
     }
   }
 
@@ -512,7 +513,7 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
       _phoneIdController.clear();
       _ownerPhoneController.clear();
     } catch (e) {
-      setState(() { _saving = false; _status = 'Error: $e'; });
+      setState(() { _saving = false; _status = getErrorMessage(e); });
     }
   }
 
@@ -528,7 +529,7 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
         children: [
           settingsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error loading settings: $e', style: const TextStyle(color: AppColors.error)),
+            error: (e, _) => Text(getErrorMessage(e), style: const TextStyle(color: AppColors.error)),
             data: (settings) {
               // Initialize toggle state from server settings on first load
               if (!_settingsInitialized) {

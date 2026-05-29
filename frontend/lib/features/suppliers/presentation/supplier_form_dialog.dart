@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_refresh.dart';
 import '../data/suppliers_repository.dart';
 import 'suppliers_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class SupplierFormDialog extends ConsumerStatefulWidget {
   final SupplierModel? supplier;
@@ -70,7 +71,7 @@ class _SupplierFormDialogState extends ConsumerState<SupplierFormDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     } finally {

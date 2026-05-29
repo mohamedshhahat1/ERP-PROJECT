@@ -7,6 +7,7 @@ import '../../customers/presentation/customers_provider.dart';
 import '../../products/data/products_repository.dart';
 import '../data/sales_repository.dart';
 import 'sales_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class CreateSaleDialog extends ConsumerStatefulWidget {
   final VoidCallback onCreated;
@@ -152,7 +153,7 @@ class _CreateSaleDialogState extends ConsumerState<CreateSaleDialog> {
             const SizedBox(height: 12),
             customersAsync.when(
               loading: () => const CircularProgressIndicator(),
-              error: (e, _) => Text('Error: $e'),
+              error: (e, _) => Text(getErrorMessage(e)),
               data: (customers) => DropdownButtonFormField<int>(
                 value: _selectedCustomerId,
                 decoration: const InputDecoration(labelText: 'Customer', hintText: 'Select a customer'),

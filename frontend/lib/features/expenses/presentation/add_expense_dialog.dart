@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../data/expenses_repository.dart';
 import 'expenses_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class AddExpenseDialog extends ConsumerStatefulWidget {
   const AddExpenseDialog({super.key});
@@ -78,7 +79,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
         );
       }
     } finally {

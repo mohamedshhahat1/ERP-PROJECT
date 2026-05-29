@@ -7,6 +7,7 @@ import '../../suppliers/data/suppliers_repository.dart';
 import 'purchases_provider.dart';
 import 'create_purchase_dialog.dart';
 import 'purchase_detail_drawer.dart';
+import '../../../core/utils/error_utils.dart';
 
 class PurchasesPage extends ConsumerStatefulWidget {
   const PurchasesPage({super.key});
@@ -141,7 +142,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                 Expanded(
                   child: filteredPurchases.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(child: Text('Error: $e')),
+                    error: (e, _) => Center(child: Text(getErrorMessage(e))),
                     data: (purchases) {
                       if (purchases.isEmpty) {
                         return Center(
@@ -243,7 +244,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
                   );
                 }
               }

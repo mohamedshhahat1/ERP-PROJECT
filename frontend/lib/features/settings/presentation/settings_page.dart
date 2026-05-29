@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/network/api_client.dart';
 import '../../opening_balances/data/opening_balance_repository.dart';
 import '../../opening_balances/presentation/opening_balances_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 final _systemInfoProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.read(dioProvider);
@@ -205,7 +206,7 @@ class SettingsPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(getErrorMessage(e)), backgroundColor: AppColors.error),
                   );
                 }
               }

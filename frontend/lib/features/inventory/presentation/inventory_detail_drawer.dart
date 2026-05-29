@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/inventory_repository.dart';
 import 'inventory_provider.dart';
+import '../../../core/utils/error_utils.dart';
 
 class InventoryDetailDrawer extends ConsumerStatefulWidget {
   final InventoryItem item;
@@ -50,7 +51,7 @@ class _InventoryDetailDrawerState extends ConsumerState<InventoryDetailDrawer> w
       final result = await repo.aiChat(question);
       setState(() => _aiInsight = result['response']?.toString());
     } catch (e) {
-      setState(() => _aiInsight = 'Error: $e');
+      setState(() => _aiInsight = getErrorMessage(e));
     } finally {
       setState(() => _aiLoading = false);
     }
