@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.database import get_db
 from app.models.users import User
 from app.core.security import verify_password, hash_password, create_access_token, decode_access_token
@@ -65,7 +65,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Your account has been deactivated. Please contact support.",
         )
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
     token = create_access_token({"sub": str(user.user_id), "role": user.role})
@@ -76,7 +76,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "username": user.username,
         "role": user.role,
         "full_name": user.full_name,
-        "login_time": datetime.utcnow().isoformat(),
+        "login_time": datetime.now(timezone.utc).isoformat(),
     })
 
     return TokenResponse(
@@ -120,7 +120,7 @@ def refresh_token(current_user: User = Depends(get_current_user)):
         "username": current_user.username,
         "role": current_user.role,
         "full_name": current_user.full_name,
-        "login_time": datetime.utcnow().isoformat(),
+        "login_time": datetime.now(timezone.utc).isoformat(),
     })
 
     return TokenResponse(

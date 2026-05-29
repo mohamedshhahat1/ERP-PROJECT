@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, text
 from datetime import date, timedelta
@@ -11,6 +11,8 @@ from app.services.expense_service import ExpenseService
 from app.core.deps import require_permission, get_current_user
 from app.models.users import User
 from app.models.expenses import Expense, ExpenseCategory
+from app.models.accounting import LedgerEntry
+from app.models.cash import CashTransaction
 
 router = APIRouter()
 
@@ -139,6 +141,19 @@ def delete_expense(
     db: Session = Depends(get_db),
 ):
     expense = db.query(Expense).filter(Expense.expense_id == expense_id).first()
-    if expense:
-        db.delete(expense)
-        db.commit()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    # Reverse associated ledger entries and cash transactions
+    db.query(LedgerEntry).filter(
+        LedgerEntry.entity_type == "expense",
+        LedgerEntry.entity_id == expense_id,
+    ).delete()
+
+    db.query(CashTransaction).filter(
+        CashTransaction.entity_type == "expense",
+        CashTransaction.entity_id == expense_id,
+    ).delete()
+
+    db.delete(expense)
+    db.commit()

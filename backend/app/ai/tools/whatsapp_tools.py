@@ -67,6 +67,16 @@ class WhatsAppTools:
 
         to_clean = to.replace("+", "").replace(" ", "").replace("-", "")
 
+        # Validate phone number format (must be digits only, 10-15 chars for international)
+        if not to_clean.isdigit() or len(to_clean) < 10 or len(to_clean) > 15:
+            return {"error": f"Invalid phone number format: '{to}'. Must be 10-15 digits (international format without +)."}
+
+        # Sanitize message content — prevent excessively long or empty messages
+        if not message or not message.strip():
+            return {"error": "Message body cannot be empty."}
+        if len(message) > 4096:
+            return {"error": "Message too long. WhatsApp limit is 4096 characters."}
+
         try:
             result = self._send_text_message(to_clean, message)
             message_id = result.get("messages", [{}])[0].get("id", "unknown")

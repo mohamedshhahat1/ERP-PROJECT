@@ -109,7 +109,13 @@ def get_purchase_items(
             )
             for r in rows
         ]
-    except Exception:
+    except Exception as e:
+        # Log the error for debugging but don't mask it
+        import logging
+        logging.getLogger(__name__).warning(
+            f"Failed to compute returned quantities for purchase {purchase_invoice_id}: {e}. "
+            f"Falling back to items without return info."
+        )
         db.rollback()
         rows = (
             db.query(

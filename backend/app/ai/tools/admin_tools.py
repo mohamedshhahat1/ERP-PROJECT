@@ -303,6 +303,12 @@ class AdminTools:
         from app.models.users import User
         from app.core.security import hash_password
         from app.database import transaction
+
+        # Validate role against allowed values
+        valid_roles = ("admin", "manager", "cashier", "warehouse_employee", "accountant")
+        if role not in valid_roles:
+            return {"error": f"Invalid role '{role}'. Must be one of: {', '.join(valid_roles)}"}
+
         existing = self.db.query(User).filter(User.username == username).first()
         if existing:
             return {"error": f"Username '{username}' already exists"}
@@ -339,15 +345,24 @@ class AdminTools:
         return {"user_id": user_id, "status": "activated"}
 
     def reset_user_password(self, user_id: int) -> dict:
+        import secrets
         from app.models.users import User
         from app.core.security import hash_password
         from app.database import transaction
         user = self.db.query(User).filter(User.user_id == user_id).first()
         if not user:
             return {"error": f"User #{user_id} not found"}
+        temp_password = secrets.token_urlsafe(12)
         with transaction(self.db):
-            user.password = hash_password("123456")
-        return {"user_id": user_id, "status": "password_reset", "new_password": "123456"}
+            user.password = hash_password(temp_password)
+        return {
+            "user_id": user_id,
+            "username": user.username,
+            "status": "password_reset",
+            "message": f"تم إعادة تعيين كلمة مرور المستخدم '{user.username}'. "
+                       f"كلمة المرور المؤقتة: {temp_password}",
+            "must_change": True,
+        }
 
     # ═══ Ledger / Journal Entries ═══
 

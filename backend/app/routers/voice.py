@@ -157,16 +157,27 @@ async def voice_websocket_endpoint(
 ):
     """WebSocket endpoint for realtime voice interactions.
     Pass JWT token as ?token=<jwt> query param for authenticated access.
-    Token is re-validated before each AI processing to detect expiry.
+    Rejects unauthenticated connections.
     """
-    user_role = "ai_agent"
-    if token:
-        from app.core.security import decode_access_token
-        payload = decode_access_token(token)
-        if payload:
-            user_id = payload.get("sub")
-            if user_id:
-                user = db.query(User).filter(User.user_id == int(user_id)).first()
-                if user and user.active_status:
-                    user_role = user.role
+    if not token:
+        await websocket.close(code=4001, reason="Authentication required")
+        return
+
+    from app.core.security import decode_access_token
+    payload = decode_access_token(token)
+    if not payload:
+        await websocket.close(code=4001, reason="Invalid or expired token")
+        return
+
+    user_id = payload.get("sub")
+    if not user_id:
+        await websocket.close(code=4001, reason="Invalid token payload")
+        return
+
+    user = db.query(User).filter(User.user_id == int(user_id)).first()
+    if not user or not user.active_status:
+        await websocket.close(code=4003, reason="User not found or inactive")
+        return
+
+    user_role = user.role
     await handle_voice_websocket(websocket, session_id, db, user_role=user_role, token=token)

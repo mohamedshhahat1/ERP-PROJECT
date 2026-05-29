@@ -53,27 +53,22 @@ class WorkflowTools:
                 "whatsapp_reason": "Customer has no phone number on file",
             }
 
-        # Step 3: Build message
+        # Step 3: Build message (use predefined template, ignore custom templates for safety)
         customer_name = self._get_customer_name(customer_id)
-        if message_template:
-            message = message_template.format(
-                customer_name=customer_name,
-                invoice_id=invoice_id,
-                total=f"{total:,.0f}",
-                payment_type=payment_type,
-            )
-        else:
-            item_count = len(items)
-            message = (
-                f"السلام عليكم {customer_name}،\n"
-                f"تم إنشاء فاتورة رقم #{invoice_id}\n"
-                f"───────────────\n"
-                f"\U0001f4cb عدد الأصناف: {item_count}\n"
-                f"\U0001f4b0 الإجمالي: {total:,.0f} جنيه\n"
-                f"\U0001f4b3 طريقة الدفع: {self._translate_payment_type(payment_type)}\n"
-                f"───────────────\n"
-                f"شكراً لتعاملكم معنا \U0001f64f"
-            )
+        # NOTE: message_template from AI is intentionally NOT used to prevent
+        # prompt injection attacks that could send malicious content to customers.
+        # Only the predefined message format is allowed.
+        item_count = len(items)
+        message = (
+            f"السلام عليكم {customer_name}،\n"
+            f"تم إنشاء فاتورة رقم #{invoice_id}\n"
+            f"───────────────\n"
+            f"\U0001f4cb عدد الأصناف: {item_count}\n"
+            f"\U0001f4b0 الإجمالي: {total:,.0f} جنيه\n"
+            f"\U0001f4b3 طريقة الدفع: {self._translate_payment_type(payment_type)}\n"
+            f"───────────────\n"
+            f"شكراً لتعاملكم معنا \U0001f64f"
+        )
 
         # Step 4: Send WhatsApp
         wa_result = self.whatsapp.send_whatsapp_message(phone, message)

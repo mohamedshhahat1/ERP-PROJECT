@@ -55,9 +55,16 @@ def activate_user(user_id: int, current_user: User = Depends(require_admin), db:
 
 @router.put("/{user_id}/reset-password")
 def reset_password(user_id: int, current_user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    import secrets
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    user.password = hash_password("123456")
+    # Generate a strong random temporary password
+    temp_password = secrets.token_urlsafe(12)
+    user.password = hash_password(temp_password)
     db.commit()
-    return {"detail": "Password reset to default (123456)"}
+    return {
+        "detail": "Password has been reset. Please share the temporary password securely with the user.",
+        "temporary_password": temp_password,
+        "must_change": True,
+    }
