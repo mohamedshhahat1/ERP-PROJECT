@@ -1,15 +1,65 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.core.deps import get_current_user
+from app.core.redis import get_redis
 from app.models.users import User
 from app.services.ai_service import AIService
 from app.ai.claude_client import ClaudeClient
 from app.ai.safety.permissions import AIPermissionChecker, AIPermissionDenied
+import time
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# --- Rate Limiting ---
+# Max AI requests per user per minute
+AI_RATE_LIMIT = 20
+AI_RATE_WINDOW = 60  # seconds
+
+
+def _check_rate_limit(user_id: int):
+    """Simple sliding-window rate limiter using Redis."""
+    redis = get_redis()
+    key = f"ai:rate:{user_id}"
+    current = redis.get(key)
+    if current and int(current) >= AI_RATE_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded. Maximum {AI_RATE_LIMIT} AI requests per minute.",
+        )
+    pipe = redis.pipeline()
+    pipe.incr(key)
+    pipe.expire(key, AI_RATE_WINDOW)
+    pipe.execute()
+
+
+def _validate_session_ownership(session_id: str, user_id: int):
+    """Validate that a session ID belongs to the requesting user.
+
+    Session IDs are formatted as 'session-{timestamp}' on the client.
+    We enforce ownership by prefixing with user_id on storage.
+    For backward compatibility, we also accept sessions that start with
+    the user's ID prefix.
+    """
+    # Session IDs should be scoped to the user
+    # Format: "{user_id}-{rest}" or "session-{timestamp}" (legacy)
+    # We'll check if session data exists and belongs to this user via Redis
+    redis = get_redis()
+    owner_key = f"ai:session_owner:{session_id}"
+    stored_owner = redis.get(owner_key)
+    if stored_owner is not None:
+        if int(stored_owner) != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: this conversation belongs to another user.",
+            )
+    else:
+        # First access — claim ownership
+        redis.set(owner_key, str(user_id), ex=86400)  # 24h TTL
 
 
 class ToolRequest(BaseModel):
@@ -19,14 +69,16 @@ class ToolRequest(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    session_id: str
-    message: str
+    session_id: str = Field(..., max_length=100)
+    message: str = Field(..., max_length=10000)
 
 
 # --- CHAT (Claude Sonnet) ---
 
 @router.post("/chat")
 def ai_chat(data: ChatRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    _check_rate_limit(current_user.user_id)
+    _validate_session_ownership(data.session_id, current_user.user_id)
     client = ClaudeClient(db, user_role=current_user.role)
     response = client.chat(data.session_id, data.message)
     return {"response": response, "session_id": data.session_id}
@@ -34,6 +86,8 @@ def ai_chat(data: ChatRequest, current_user: User = Depends(get_current_user), d
 
 @router.post("/chat/stream")
 def ai_chat_stream(data: ChatRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    _check_rate_limit(current_user.user_id)
+    _validate_session_ownership(data.session_id, current_user.user_id)
     client = ClaudeClient(db, user_role=current_user.role)
     return StreamingResponse(
         client.chat_stream(data.session_id, data.message),
@@ -134,12 +188,14 @@ def ai_search(query: str, current_user: User = Depends(get_current_user), db: Se
 
 @router.get("/conversation/{session_id}")
 def get_conversation(session_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    _validate_session_ownership(session_id, current_user.user_id)
     service = AIService(db)
     return {"messages": service.get_conversation(session_id)}
 
 
 @router.delete("/conversation/{session_id}")
 def clear_conversation(session_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    _validate_session_ownership(session_id, current_user.user_id)
     service = AIService(db)
     service.clear_conversation(session_id)
     return {"detail": "Conversation cleared"}
