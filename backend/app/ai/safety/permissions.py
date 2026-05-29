@@ -221,6 +221,11 @@ class AIPermissionChecker:
         if role_config == "*":
             return True
         if isinstance(role_config, dict):
+            # Check blocked list first (explicit deny takes precedence)
+            blocked = role_config.get("blocked", [])
+            if isinstance(blocked, list) and tool_name in blocked:
+                return False
+            # Then check allowed list
             allowed = role_config.get("allowed", [])
             return tool_name in allowed
         return False

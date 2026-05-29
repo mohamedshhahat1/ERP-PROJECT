@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -7,6 +7,7 @@ from app.core.deps import get_current_user
 from app.models.users import User
 from app.services.ai_service import AIService
 from app.ai.claude_client import ClaudeClient
+from app.ai.safety.permissions import AIPermissionChecker, AIPermissionDenied
 
 router = APIRouter()
 
@@ -44,6 +45,28 @@ def ai_chat_stream(data: ChatRequest, current_user: User = Depends(get_current_u
 
 @router.post("/tool")
 def execute_ai_tool(data: ToolRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Execute an AI tool with role-based permission enforcement."""
+    # Enforce permission check BEFORE execution
+    permission_checker = AIPermissionChecker(user_role=current_user.role)
+    try:
+        permission_checker.check_or_raise(data.tool)
+    except AIPermissionDenied as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e),
+        )
+
+    # Check amount limits if params contain an amount field
+    amount = data.params.get("amount") or data.params.get("total_amount") or data.params.get("paid_amount")
+    if amount is not None:
+        try:
+            permission_checker.check_amount(data.tool, float(amount))
+        except AIPermissionDenied as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=str(e),
+            )
+
     service = AIService(db)
     return service.execute_tool(data.agent, data.tool, data.params)
 
