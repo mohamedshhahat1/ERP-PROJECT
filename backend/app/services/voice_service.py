@@ -22,6 +22,9 @@ class VoiceService:
         self.azure_speech_region = settings.azure_speech_region
         self.azure_tts_voice = settings.azure_tts_voice
 
+    # Maximum audio upload size: 25MB (OpenAI Whisper limit)
+    MAX_AUDIO_SIZE = 25 * 1024 * 1024
+
     async def transcribe(self, audio_data: bytes, language: str = "auto") -> dict:
         """Transcribe audio using OpenAI Whisper API (batch mode)."""
         if not self.openai_api_key:
@@ -31,6 +34,25 @@ class VoiceService:
                 "confidence": 0,
                 "duration_seconds": 0,
                 "error": "OPENAI_API_KEY not configured",
+            }
+
+        # Validate audio size to prevent memory exhaustion
+        if len(audio_data) > self.MAX_AUDIO_SIZE:
+            return {
+                "text": "",
+                "language_detected": "ar",
+                "confidence": 0,
+                "duration_seconds": 0,
+                "error": f"Audio too large ({len(audio_data)} bytes). Maximum is {self.MAX_AUDIO_SIZE} bytes (25MB).",
+            }
+
+        if len(audio_data) == 0:
+            return {
+                "text": "",
+                "language_detected": "ar",
+                "confidence": 0,
+                "duration_seconds": 0,
+                "error": "Empty audio data",
             }
 
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -283,9 +305,13 @@ class DeepgramStreamer:
         return final_text.strip()
 
     async def close(self):
-        """Close the WebSocket connection."""
+        """Close the WebSocket connection and clean up the receive task."""
         if self._task:
             self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
         if self._ws:
             await self._ws.close()
 

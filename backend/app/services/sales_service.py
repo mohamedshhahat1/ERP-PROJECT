@@ -42,6 +42,14 @@ class SalesService:
 
             total_amount = sum(item.total_price for item in data.items)
 
+            # Validate discount does not exceed total
+            if data.discount_amount < 0:
+                raise ValidationError("Discount amount cannot be negative")
+            if data.discount_amount > total_amount:
+                raise ValidationError(
+                    f"Discount ({data.discount_amount}) cannot exceed total amount ({total_amount})"
+                )
+
             if data.invoice_type in ("credit", "mixed") and data.customer_id:
                 self.validator.validate_credit_limit(data.customer_id, total_amount)
 
