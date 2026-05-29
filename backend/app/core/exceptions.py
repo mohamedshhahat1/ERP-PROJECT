@@ -14,6 +14,10 @@ class ValidationError(AppError):
         super().__init__(message, status_code=422)
 
 
-class PermissionError(AppError):
+class ForbiddenError(AppError):
     def __init__(self, message: str = "Permission denied"):
         super().__init__(message, status_code=403)
+
+
+# Backward compatibility alias (deprecated — use ForbiddenError instead)
+PermissionDeniedError = ForbiddenError

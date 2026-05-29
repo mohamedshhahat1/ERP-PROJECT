@@ -13,6 +13,7 @@ async def lifespan(application: FastAPI):
     from app.database import Base, engine
     import app.models  # noqa: F401 — ensure all models are registered
     Base.metadata.create_all(bind=engine)
+    register_event_handlers()
     yield
 
 
@@ -32,7 +33,6 @@ app.add_middleware(
 )
 
 app.add_exception_handler(AppError, app_error_handler)
-register_event_handlers()
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])

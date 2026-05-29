@@ -10,6 +10,11 @@ from app.models.suppliers import Supplier
 from app.repositories.embedding_repo import EmbeddingRepository
 
 
+def _escape_like(query: str) -> str:
+    """Escape SQL LIKE/ILIKE wildcard characters to prevent injection."""
+    return query.replace("%", r"\%").replace("_", r"\_")
+
+
 class ERPContextRetriever:
     """Retrieves relevant ERP context for AI queries.
     Uses pgvector semantic search when embeddings exist,
@@ -25,8 +30,9 @@ class ERPContextRetriever:
         return self.embedding_repo.search_similar(query_embedding, limit, source_type)
 
     def search_products(self, query: str, limit: int = 5) -> list[dict]:
+        safe_query = _escape_like(query)
         results = self.db.query(Product).filter(
-            Product.product_name.ilike(f"%{query}%"),
+            Product.product_name.ilike(f"%{safe_query}%"),
             Product.active_status == True,
         ).limit(limit).all()
         return [
@@ -40,8 +46,9 @@ class ERPContextRetriever:
         ]
 
     def search_customers(self, query: str, limit: int = 5) -> list[dict]:
+        safe_query = _escape_like(query)
         results = self.db.query(Customer).filter(
-            Customer.customer_name.ilike(f"%{query}%")
+            Customer.customer_name.ilike(f"%{safe_query}%")
         ).limit(limit).all()
         return [
             {
@@ -53,8 +60,9 @@ class ERPContextRetriever:
         ]
 
     def search_suppliers(self, query: str, limit: int = 5) -> list[dict]:
+        safe_query = _escape_like(query)
         results = self.db.query(Supplier).filter(
-            Supplier.supplier_name.ilike(f"%{query}%")
+            Supplier.supplier_name.ilike(f"%{safe_query}%")
         ).limit(limit).all()
         return [
             {

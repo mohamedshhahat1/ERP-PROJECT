@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.sales import SalesInvoiceCreate, SalesInvoiceResponse, SalesReturnCreate, SalesReturnResponse
@@ -42,9 +42,15 @@ class InvoiceItemResponse(BaseModel):
 
 
 @router.get("/", response_model=list[SalesInvoiceResponse])
-def list_sales(current_user: User = Depends(require_permission("sales:read")), db: Session = Depends(get_db)):
+def list_sales(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    current_user: User = Depends(require_permission("sales:read")),
+    db: Session = Depends(get_db),
+):
     service = SalesService(db)
-    return service.list_invoices()
+    invoices = service.list_invoices()
+    return invoices[skip:skip + limit]
 
 
 @router.get("/{invoice_id}", response_model=SalesInvoiceResponse)

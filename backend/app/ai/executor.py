@@ -396,8 +396,9 @@ class ToolExecutor:
             return json.dumps(result, default=str)
         except Exception as e:
             self.observer.fail(audit, str(e))
-            logger.error(f"Tool execution error [{tool_name}]: {e}")
-            return json.dumps({"error": str(e)})
+            logger.error(f"Tool execution error [{tool_name}]: {e}", exc_info=True)
+            # Return sanitized error to AI — do not expose internal details
+            return json.dumps({"error": "حصل خطأ أثناء تنفيذ العملية. حاول مرة أخرى أو تواصل مع المسؤول."})
 
     def _execute_with_safety(self, tool_name: str, params: dict, fn, audit) -> str:
         cached = self.idempotency.check_duplicate(tool_name, params)
@@ -436,8 +437,8 @@ class ToolExecutor:
             return json.dumps(result_dict, default=str)
         except Exception as e:
             self.observer.fail(audit, str(e))
-            logger.error(f"Tool execution error [{tool_name}]: {e}")
-            return json.dumps({"error": str(e)})
+            logger.error(f"Tool execution error [{tool_name}]: {e}", exc_info=True)
+            return json.dumps({"error": "حصل خطأ أثناء تنفيذ العملية. حاول مرة أخرى أو تواصل مع المسؤول."})
 
     def _confirm_transaction(self, confirmation_id: str) -> str:
         if not confirmation_id:
@@ -463,8 +464,8 @@ class ToolExecutor:
             self._store_in_memory(tool_name, params, result_dict)
             return json.dumps(result_dict, default=str)
         except Exception as e:
-            logger.error(f"Confirmed tool execution error [{tool_name}]: {e}")
-            return json.dumps({"error": str(e)})
+            logger.error(f"Confirmed tool execution error [{tool_name}]: {e}", exc_info=True)
+            return json.dumps({"error": "حصل خطأ أثناء تنفيذ العملية المؤكدة. حاول مرة أخرى."})
 
     def _store_in_memory(self, tool_name: str, params: dict, result: dict):
         try:

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from decimal import Decimal
@@ -46,11 +46,14 @@ class PurchaseItemResponse(BaseModel):
 
 @router.get("/", response_model=list[PurchaseInvoiceResponse])
 def list_purchases(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
     current_user: User = Depends(require_permission("purchases:read")),
     db: Session = Depends(get_db),
 ):
     service = PurchaseService(db)
-    return service.list_invoices()
+    invoices = service.list_invoices()
+    return invoices[skip:skip + limit]
 
 
 @router.get("/{purchase_invoice_id}", response_model=PurchaseInvoiceResponse)

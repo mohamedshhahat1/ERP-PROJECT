@@ -147,13 +147,27 @@ class SalesService:
             invoice_items = self.repo.get_items(invoice_id)
             item_map = {item.product_id: item for item in invoice_items}
 
+            # Calculate previously returned quantities for this invoice
+            existing_returns = self.repo.get_returns_for_invoice(invoice_id)
+            previously_returned = {}  # product_id -> total already returned
+            for ret in existing_returns:
+                ret_items = self.repo.get_return_items(ret.return_id)
+                for ri in ret_items:
+                    previously_returned[ri.product_id] = (
+                        previously_returned.get(ri.product_id, Decimal("0")) + ri.returned_quantity
+                    )
+
             for ret_item in data.items:
                 orig = item_map.get(ret_item.product_id)
                 if not orig:
                     raise ValidationError(f"Product {ret_item.product_id} not found in this invoice")
-                if ret_item.returned_quantity > orig.sold_quantity:
+                already_returned = previously_returned.get(ret_item.product_id, Decimal("0"))
+                available_to_return = orig.sold_quantity - already_returned
+                if ret_item.returned_quantity > available_to_return:
                     raise ValidationError(
-                        f"Return quantity ({ret_item.returned_quantity}) exceeds sold quantity ({orig.sold_quantity})"
+                        f"Return quantity ({ret_item.returned_quantity}) exceeds remaining returnable "
+                        f"quantity ({available_to_return}) for product {ret_item.product_id}. "
+                        f"Sold: {orig.sold_quantity}, Previously returned: {already_returned}"
                     )
 
             returned_amount = sum(item.total for item in data.items)

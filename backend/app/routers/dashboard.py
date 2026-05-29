@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from datetime import date
 from app.database import get_db
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, require_permission
 from app.core.redis import get_redis
 from app.services.cache_service import CacheService
 from app.models.sales import SalesInvoice
@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.get("/summary")
-def get_dashboard_summary(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_dashboard_summary(current_user: User = Depends(require_permission("dashboard:read")), db: Session = Depends(get_db)):
     cache = CacheService(get_redis())
     cached = cache.get_dashboard()
     if cached:

@@ -37,6 +37,7 @@ SENSITIVE_OPERATIONS = {
     "refresh_daily_summary",
     "refresh_summary_range",
     # WhatsApp sensitive operations
+    "send_whatsapp_message",
     "send_overdue_reminders",
     # Workflow sensitive operations
     "create_invoice_and_notify",
@@ -64,7 +65,8 @@ CONFIRMATION_THRESHOLDS = {
     "delete_category": lambda params: True,
     "refresh_daily_summary": lambda params: False,
     "refresh_summary_range": lambda params: False,
-    # WhatsApp thresholds (bulk messages always require confirmation)
+    # WhatsApp thresholds (all direct messages require confirmation)
+    "send_whatsapp_message": lambda params: True,
     "send_overdue_reminders": lambda params: True,
     # Workflow thresholds (invoice+notify uses same threshold as invoice)
     "create_invoice_and_notify": lambda params: _total_amount(params) > 5000,
