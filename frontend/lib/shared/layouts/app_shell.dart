@@ -7,6 +7,36 @@ import '../../features/notifications/presentation/notifications_provider.dart';
 
 final sidebarCollapsedProvider = StateProvider<bool>((ref) => false);
 
+/// Tracks navigation history without consecutive duplicates.
+/// e.g., Sales→Products→Sales→Products becomes [Sales, Products]
+final _navHistoryProvider = StateNotifierProvider<_NavHistoryNotifier, List<String>>((ref) => _NavHistoryNotifier());
+
+class _NavHistoryNotifier extends StateNotifier<List<String>> {
+  _NavHistoryNotifier() : super(['/']);
+
+  void navigate(String path) {
+    // Don't add if same as current (last) page
+    if (state.isNotEmpty && state.last == path) return;
+    // Don't add if it would create a duplicate pattern (A→B→A→B → keep A→B)
+    if (state.length >= 2 && state[state.length - 2] == path) {
+      // Going back to the previous page — just pop the last entry
+      state = [...state.sublist(0, state.length - 1)];
+    } else {
+      state = [...state, path];
+    }
+    // Keep max 20 entries
+    if (state.length > 20) {
+      state = state.sublist(state.length - 20);
+    }
+  }
+
+  String? goBack() {
+    if (state.length <= 1) return null; // Can't go back further
+    state = [...state.sublist(0, state.length - 1)];
+    return state.last;
+  }
+}
+
 class AppShell extends ConsumerWidget {
   final Widget child;
   const AppShell({super.key, required this.child});
@@ -17,7 +47,16 @@ class AppShell extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userRole = ref.watch(authProvider).token?.role ?? '';
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        final previousPath = ref.read(_navHistoryProvider.notifier).goBack();
+        if (previousPath != null) {
+          Router.neglect(context, () => GoRouter.of(context).go(previousPath));
+        }
+      },
+      child: Scaffold(
       body: Row(
         children: [
           AnimatedContainer(
@@ -212,6 +251,7 @@ class AppShell extends ConsumerWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -228,10 +268,9 @@ class AppShell extends ConsumerWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: isActive ? null : () {
-            // Use Router.neglect to prevent browser history buildup on sidebar navigation
-            Router.neglect(context, () {
-              GoRouter.of(context).go(path);
-            });
+            // Track in deduplication history + navigate
+            ref.read(_navHistoryProvider.notifier).navigate(path);
+            Router.neglect(context, () => GoRouter.of(context).go(path));
           },
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: collapsed ? 16 : 12, vertical: 10),
