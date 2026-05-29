@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from decimal import Decimal
 from app.database import transaction
 from app.repositories.inventory_repo import InventoryRepository
+from app.services.inventory_service import InventoryService
 from app.core.validators import Validator
 from app.core.exceptions import NotFoundError
 from app.models.transfers import WarehouseTransfer
@@ -11,6 +12,7 @@ class TransferService:
     def __init__(self, db: Session):
         self.db = db
         self.inventory_repo = InventoryRepository(db)
+        self.inventory_service = InventoryService(db)
         self.validator = Validator(db)
 
     def create_transfer(self, from_warehouse_id: int, to_warehouse_id: int,
@@ -63,6 +65,14 @@ class TransferService:
                 reference_type="warehouse_transfer",
                 reference_id=transfer.transfer_id,
             )
+
+            # Update InventoryCache atomically for both warehouses
+            self.inventory_service._update_cache_quantity(product_id, from_warehouse_id, -quantity)
+            self.inventory_service._update_cache_quantity(product_id, to_warehouse_id, quantity)
+
+        # Invalidate Redis cache after commit
+        self.inventory_service.cache.invalidate_stock(product_id, from_warehouse_id)
+        self.inventory_service.cache.invalidate_stock(product_id, to_warehouse_id)
 
         self.db.refresh(transfer)
         return transfer

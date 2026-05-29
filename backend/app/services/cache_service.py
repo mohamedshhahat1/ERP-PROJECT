@@ -69,17 +69,27 @@ class CacheService:
 
     # --- AI CONVERSATION MEMORY ---
 
+    # Maximum messages stored per conversation to prevent unbounded growth
+    MAX_CONVERSATION_MESSAGES = 100
+
     def get_ai_conversation(self, session_id: str) -> list | None:
         key = AI_CONVERSATION_KEY.format(session_id=session_id)
         return self.redis.get_json(key)
 
     def set_ai_conversation(self, session_id: str, messages: list):
         key = AI_CONVERSATION_KEY.format(session_id=session_id)
+        # Cap at maximum to prevent memory exhaustion
+        if len(messages) > self.MAX_CONVERSATION_MESSAGES:
+            # Keep system/first message + most recent messages
+            messages = messages[:1] + messages[-(self.MAX_CONVERSATION_MESSAGES - 1):]
         self.redis.set_json(key, messages, AI_CONVERSATION_TTL)
 
     def append_ai_message(self, session_id: str, message: dict):
         messages = self.get_ai_conversation(session_id) or []
         messages.append(message)
+        # Enforce cap on append to avoid O(n^2) growth
+        if len(messages) > self.MAX_CONVERSATION_MESSAGES:
+            messages = messages[:1] + messages[-(self.MAX_CONVERSATION_MESSAGES - 1):]
         self.set_ai_conversation(session_id, messages)
 
     def clear_ai_conversation(self, session_id: str):
