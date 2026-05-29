@@ -13,17 +13,28 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register(data: UserCreate, db: Session = Depends(get_db)):
+def register(
+    data: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create a new user. Only admins can register new accounts."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can create new users.",
+        )
     existing = db.query(User).filter(User.username == data.username).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already exists",
         )
-    if data.role not in ("admin", "cashier", "warehouse_employee", "accountant"):
+    valid_roles = ("admin", "manager", "cashier", "warehouse_employee", "accountant")
+    if data.role not in valid_roles:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid role. Must be: admin, cashier, warehouse_employee, or accountant",
+            detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}",
         )
     user = User(
         full_name=data.full_name,
