@@ -162,85 +162,11 @@ class AppShell extends ConsumerWidget {
                         icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
                       ),
                       const SizedBox(width: 16),
-                      PopupMenuButton<String>(
-                        offset: const Offset(0, 50),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundColor: AppColors.primary,
-                              child: Text(
-                                (ref.watch(authProvider).token?.fullName ?? 'U').substring(0, 1).toUpperCase(),
-                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            if (!collapsed) ...[
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_drop_down, size: 20),
-                            ],
-                          ],
-                        ),
-                        itemBuilder: (ctx) {
-                          final token = ref.read(authProvider).token;
-                          final name = token?.fullName ?? 'User';
-                          final role = token?.role ?? '';
-                          return [
-                            // User info header
-                            PopupMenuItem<String>(
-                              enabled: false,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                                  const SizedBox(height: 2),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(role, style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w500)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            // Menu items
-                            const PopupMenuItem(value: '/settings', child: ListTile(dense: true, leading: Icon(Icons.settings_rounded, size: 20), title: Text('Settings', style: TextStyle(fontSize: 13)))),
-                            if (role == 'admin') ...[
-                              const PopupMenuItem(value: '/accounting', child: ListTile(dense: true, leading: Icon(Icons.menu_book_rounded, size: 20), title: Text('Accounting', style: TextStyle(fontSize: 13)))),
-                              const PopupMenuItem(value: '/users', child: ListTile(dense: true, leading: Icon(Icons.manage_accounts_rounded, size: 20), title: Text('Users', style: TextStyle(fontSize: 13)))),
-                              const PopupMenuItem(value: '/ai-audit', child: ListTile(dense: true, leading: Icon(Icons.admin_panel_settings_rounded, size: 20), title: Text('AI Audit', style: TextStyle(fontSize: 13)))),
-                              const PopupMenuItem(value: '/ai-analytics', child: ListTile(dense: true, leading: Icon(Icons.insights_rounded, size: 20), title: Text('AI Analytics', style: TextStyle(fontSize: 13)))),
-                            ],
-                            const PopupMenuDivider(),
-                            const PopupMenuItem(value: 'logout', child: ListTile(dense: true, leading: Icon(Icons.logout, size: 20, color: AppColors.error), title: Text('Logout', style: TextStyle(fontSize: 13, color: AppColors.error)))),
-                          ];
-                        },
-                        onSelected: (value) {
-                          if (value == 'logout') {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                title: const Row(children: [Icon(Icons.logout, color: AppColors.error), SizedBox(width: 8), Text('Logout')]),
-                                content: const Text('Are you sure you want to logout?'),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                                  FilledButton(
-                                    onPressed: () { Navigator.pop(ctx); ref.read(authProvider.notifier).logout(); },
-                                    style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-                                    child: const Text('Logout'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          } else {
-                            context.go(value);
-                          }
-                        },
+                      _PremiumProfileMenu(
+                        collapsed: collapsed,
+                        isDark: isDark,
+                        userRole: userRole,
+                        ref: ref,
                       ),
                     ],
                   ),
@@ -281,6 +207,183 @@ class AppShell extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _PremiumProfileMenu extends StatelessWidget {
+  final bool collapsed;
+  final bool isDark;
+  final String userRole;
+  final WidgetRef ref;
+
+  const _PremiumProfileMenu({
+    required this.collapsed,
+    required this.isDark,
+    required this.userRole,
+    required this.ref,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final token = ref.watch(authProvider).token;
+    final name = token?.fullName ?? 'User';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 56),
+      elevation: 12,
+      shadowColor: Colors.black26,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+      surfaceTintColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: isDark ? Colors.white.withOpacity(0.05) : AppColors.primary.withOpacity(0.05),
+          border: Border.all(color: isDark ? Colors.white12 : AppColors.primary.withOpacity(0.15)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
+                ),
+                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))],
+              ),
+              child: Center(child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700))),
+            ),
+            if (!collapsed) ...[
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary)),
+                  Text(userRole, style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : AppColors.textSecondary)),
+                ],
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: isDark ? Colors.white54 : AppColors.textSecondary),
+            ],
+          ],
+        ),
+      ),
+      itemBuilder: (ctx) => [
+        // Profile header
+        PopupMenuItem<String>(
+          enabled: false,
+          padding: EdgeInsets.zero,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: [AppColors.primary, AppColors.primary.withOpacity(0.6)],
+                    ),
+                  ),
+                  child: Center(child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700))),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [AppColors.primary.withOpacity(0.15), AppColors.primary.withOpacity(0.05)]),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(userRole.toUpperCase(), style: TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        _premiumMenuItem(Icons.settings_rounded, 'Settings', '/settings', null),
+        if (userRole == 'admin') ...[
+          _premiumMenuItem(Icons.menu_book_rounded, 'Accounting', '/accounting', AppColors.info),
+          _premiumMenuItem(Icons.manage_accounts_rounded, 'Users', '/users', AppColors.warning),
+          _premiumMenuItem(Icons.admin_panel_settings_rounded, 'AI Audit', '/ai-audit', AppColors.primary),
+          _premiumMenuItem(Icons.insights_rounded, 'AI Analytics', '/ai-analytics', AppColors.success),
+        ],
+        const PopupMenuDivider(height: 1),
+        _premiumMenuItem(Icons.logout_rounded, 'Logout', 'logout', AppColors.error),
+      ],
+      onSelected: (value) {
+        if (value == 'logout') {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppColors.error.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.logout_rounded, color: AppColors.error, size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Text('Logout', style: TextStyle(fontWeight: FontWeight.w700)),
+              ]),
+              content: const Text('Are you sure you want to logout?'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                FilledButton(
+                  onPressed: () { Navigator.pop(ctx); ref.read(authProvider.notifier).logout(); },
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                  child: const Text('Logout'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          Router.neglect(context, () => GoRouter.of(context).go(value));
+          ref.read(_navHistoryProvider.notifier).navigate(value);
+        }
+      },
+    );
+  }
+
+  PopupMenuItem<String> _premiumMenuItem(IconData icon, String label, String value, Color? iconColor) {
+    return PopupMenuItem<String>(
+      value: value,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: (iconColor ?? AppColors.textSecondary).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 18, color: iconColor ?? (isDark ? Colors.white70 : AppColors.textSecondary)),
+            ),
+            const SizedBox(width: 12),
+            Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: value == 'logout' ? AppColors.error : null)),
+          ],
         ),
       ),
     );
