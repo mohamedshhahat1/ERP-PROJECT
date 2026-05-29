@@ -146,7 +146,8 @@ class VoiceChatNotifier extends StateNotifier<VoiceChatState> {
 
   void _handleEvent(Map<String, dynamic> event) {
     final type = event['type'] as String?;
-    final data = event['data'] as Map<String, dynamic>? ?? {};
+    final rawData = event['data'];
+    final data = rawData is Map<String, dynamic> ? rawData : <String, dynamic>{};
 
     switch (type) {
       case 'stream_started':
