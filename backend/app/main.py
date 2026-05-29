@@ -5,7 +5,7 @@ from app.config import settings
 from app.core.exceptions import AppError
 from app.core.middleware import app_error_handler
 from app.events.registry import register_event_handlers
-from app.routers import auth, products, categories, customers, suppliers, sales, purchases, inventory, payments, expenses, users, transfers, dashboard, tasks, ai, reports, notifications, embeddings, ws, insights, anomalies, opening_balances, voice, ai_audit, whatsapp
+from app.routers import auth, products, categories, customers, suppliers, sales, purchases, inventory, payments, expenses, users, transfers, dashboard, tasks, ai, reports, notifications, embeddings, ws, insights, anomalies, opening_balances, voice, ai_audit, whatsapp, accounting
 
 
 @asynccontextmanager
@@ -60,6 +60,7 @@ app.include_router(expenses.router, prefix="/api/expenses", tags=["Expenses"])
 app.include_router(opening_balances.router, prefix="/api/opening-balances", tags=["Opening Balances"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Background Tasks"])
+app.include_router(accounting.router, prefix="/api/accounting", tags=["Accounting"])
 app.include_router(ws.router, tags=["WebSocket"])
 
 

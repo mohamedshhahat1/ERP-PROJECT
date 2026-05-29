@@ -19,6 +19,9 @@ import '../../features/ai_assistant/presentation/voice_chat_page.dart';
 import '../../features/ai_audit/presentation/ai_audit_page.dart';
 import '../../features/ai_audit/presentation/ai_analytics_page.dart';
 import '../../features/whatsapp/presentation/whatsapp_page.dart';
+import '../../features/users/presentation/users_page.dart';
+import '../../features/accounting/presentation/accounting_page.dart';
+import '../../features/settings/presentation/settings_page.dart';
 import '../../shared/layouts/app_shell.dart';
 
 /// A ChangeNotifier that listens to auth state changes and notifies GoRouter
@@ -68,6 +71,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/voice-ai', builder: (_, __) => const VoiceChatPage()),
           GoRoute(path: '/ai-audit', builder: (_, __) => const AIAuditPage()),
           GoRoute(path: '/ai-analytics', builder: (_, __) => const AIAnalyticsPage()),
+          GoRoute(path: '/users', builder: (_, __) => const UsersPage()),
+          GoRoute(path: '/accounting', builder: (_, __) => const AccountingPage()),
+          GoRoute(path: '/settings', builder: (_, __) => const SettingsPage()),
         ],
       ),
     ],
