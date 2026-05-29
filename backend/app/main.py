@@ -68,8 +68,11 @@ def root():
 
 @app.get("/health")
 def health_check():
+    """Basic health check — returns minimal status without infrastructure details."""
     from app.core.redis import get_redis
-    from app.core.websocket import get_ws_manager
-    redis_ok = get_redis().ping()
-    ws_count = get_ws_manager().active_connections
-    return {"status": "healthy", "redis": "connected" if redis_ok else "disconnected", "websocket_connections": ws_count}
+    try:
+        redis_ok = get_redis().ping()
+    except Exception:
+        redis_ok = False
+    status = "healthy" if redis_ok else "degraded"
+    return {"status": status}

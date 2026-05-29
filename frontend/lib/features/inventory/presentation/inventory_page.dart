@@ -487,6 +487,12 @@ class _TransferDialogState extends State<_TransferDialog> {
   bool _loading = false;
 
   @override
+  void dispose() {
+    _qtyController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final warehouses = widget.ref.read(warehouseListProvider);
     return AlertDialog(
@@ -571,6 +577,13 @@ class _AdjustStockDialogState extends State<_AdjustStockDialog> {
   final _reasonController = TextEditingController();
   String _direction = 'in';
   bool _loading = false;
+
+  @override
+  void dispose() {
+    _qtyController.dispose();
+    _reasonController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

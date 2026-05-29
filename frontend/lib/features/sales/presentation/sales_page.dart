@@ -829,11 +829,11 @@ class _SalesAiDialogState extends State<_SalesAiDialog> {
     try {
       final repo = widget.ref.read(salesRepositoryProvider);
       final resp = await repo.aiChat(query);
-      setState(() => _response = resp);
+      if (mounted) setState(() => _response = resp);
     } catch (e) {
-      setState(() => _response = 'Error: $e');
+      if (mounted) setState(() => _response = 'Error: $e');
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 

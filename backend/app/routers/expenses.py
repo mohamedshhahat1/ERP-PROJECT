@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, text
 from datetime import date, timedelta
@@ -123,15 +123,18 @@ def create_category(
     current_user: User = Depends(require_permission("expenses:write")),
     db: Session = Depends(get_db),
 ):
-    try:
-        category = ExpenseCategory(name=data.name, description=data.description)
-        db.add(category)
-        db.commit()
-        db.refresh(category)
-        return {"category_id": category.category_id, "name": category.name, "description": category.description}
-    except Exception:
-        db.rollback()
-        return {"category_id": 0, "name": data.name, "description": data.description}
+    # Check for duplicate name
+    existing = db.query(ExpenseCategory).filter(ExpenseCategory.name == data.name).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Expense category '{data.name}' already exists.",
+        )
+    category = ExpenseCategory(name=data.name, description=data.description)
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    return {"category_id": category.category_id, "name": category.name, "description": category.description}
 
 
 @router.delete("/{expense_id}", status_code=204)
