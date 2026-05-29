@@ -23,7 +23,10 @@ def register_event_handlers():
 
     # Real-time WebSocket handlers
     bus.subscribe(SALE_CREATED, handle_realtime_sale)
+    bus.subscribe(SALE_RETURNED, handle_realtime_sale)
     bus.subscribe(PURCHASE_CREATED, handle_realtime_inventory)
+    bus.subscribe(PURCHASE_RETURNED, handle_realtime_inventory)
+    bus.subscribe(INVENTORY_TRANSFER, handle_realtime_inventory)
     bus.subscribe(PAYMENT_RECEIVED, handle_realtime_payment)
     bus.subscribe(PAYMENT_MADE, handle_realtime_payment)
     bus.subscribe(EXPENSE_CREATED, handle_realtime_notification)

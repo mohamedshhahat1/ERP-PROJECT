@@ -96,17 +96,35 @@ async def ws_ai_stream(websocket: WebSocket, token: str = Query(None)):
 
 
 async def _stream_ai_response(websocket: WebSocket, user_id: int, message: dict):
-    """Simulate streaming AI response. Replace with real LLM streaming later."""
+    """Stream AI response via WebSocket using ClaudeClient."""
+    from app.database import SessionLocal
+    from app.ai.claude_client import ClaudeClient
+
     query = message.get("query", "")
+    session_id = message.get("session_id", f"ws-{user_id}")
+
+    if not query:
+        await websocket.send_text(json.dumps({"type": "error", "detail": "No query provided"}))
+        return
+
     await websocket.send_text(json.dumps({"type": "ai_start", "query": query}))
 
-    response = f"I'm analyzing your question: '{query}'. Let me check the data for you."
-    for i, char in enumerate(response):
-        await websocket.send_text(json.dumps({"type": "ai_token", "token": char, "index": i}))
-        import asyncio
-        await asyncio.sleep(0.02)
-
-    await websocket.send_text(json.dumps({"type": "ai_end", "full_response": response}))
+    try:
+        db = SessionLocal()
+        try:
+            client = ClaudeClient(db, user_role=message.get("role", "ai_agent"))
+            full_response = ""
+            async for chunk in client.chat_stream(session_id, query):
+                # chunk is a JSON string from SSE
+                if isinstance(chunk, str):
+                    await websocket.send_text(json.dumps({"type": "ai_token", "text": chunk}))
+                    full_response += chunk
+            await websocket.send_text(json.dumps({"type": "ai_end", "full_response": full_response}))
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"AI WebSocket streaming error: {e}")
+        await websocket.send_text(json.dumps({"type": "ai_end", "full_response": "حصل خطأ أثناء المعالجة. حاول مرة أخرى."}))
 
 
 def _verify_token(token: str | None) -> int | None:
