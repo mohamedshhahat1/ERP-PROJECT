@@ -93,7 +93,9 @@ class _AIAssistantPageState extends ConsumerState<AIAssistantPage> {
                     child: ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.all(16),
-                      itemCount: chatState.messages.length + (chatState.currentTool != null ? 1 : 0) + (chatState.isLoading && chatState.messages.last.content.isEmpty ? 1 : 0),
+                      itemCount: chatState.messages.length
+                          + (chatState.currentTool != null ? 1 : 0)
+                          + (chatState.isLoading && chatState.messages.isNotEmpty && chatState.messages.last.content.isEmpty ? 1 : 0),
                       itemBuilder: (_, i) {
                         if (i < chatState.messages.length) {
                           final msg = chatState.messages[i];

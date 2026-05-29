@@ -5,6 +5,11 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter error: ${details.exceptionAsString()}');
+  };
   runApp(const ProviderScope(child: CeramicERP()));
 }
 

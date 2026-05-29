@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -36,7 +37,21 @@ class AuthRepository {
 
   Future<bool> isLoggedIn() async {
     final token = await _storage.read(key: 'access_token');
-    return token != null;
+    if (token == null) return false;
+    // Decode JWT payload to check expiry (JWT is base64url: header.payload.sig)
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return false;
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final data = jsonDecode(payload) as Map<String, dynamic>;
+      final exp = data['exp'] as int?;
+      if (exp == null) return false;
+      final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+      // Consider token valid if it has at least 1 minute remaining
+      return expiryDate.isAfter(DateTime.now().add(const Duration(minutes: 1)));
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<String?> getToken() => _storage.read(key: 'access_token');

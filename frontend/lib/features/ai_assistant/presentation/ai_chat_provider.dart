@@ -80,7 +80,9 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
         _updateLastMessage('حصل مشكلة في المعالجة. جرب تاني.', false, tools);
       }
     } catch (e) {
-      _updateLastMessage('حصل خطأ: ${e.toString().substring(0, 100)}', false, []);
+      final errorStr = e.toString();
+      final truncated = errorStr.length > 100 ? errorStr.substring(0, 100) : errorStr;
+      _updateLastMessage('حصل خطأ: $truncated', false, []);
     }
 
     state = state.copyWith(isLoading: false, currentTool: null);

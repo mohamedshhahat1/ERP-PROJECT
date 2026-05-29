@@ -30,8 +30,8 @@ class _CreateSaleDialogState extends ConsumerState<CreateSaleDialog> {
   String? _errorMessage;
 
   double get _subtotal => _items.fold(0, (sum, item) => sum + item.lineTotal);
-  double get _discountTotal => double.tryParse(_discountController.text) ?? 0;
-  double get _total => _subtotal - _discountTotal;
+  double get _discountTotal => (double.tryParse(_discountController.text) ?? 0).clamp(0, _subtotal);
+  double get _total => (_subtotal - _discountTotal).clamp(0, double.infinity);
 
   void _clearError() {
     if (_errorMessage != null) setState(() => _errorMessage = null);
@@ -463,7 +463,8 @@ class _CreateSaleDialogState extends ConsumerState<CreateSaleDialog> {
     _clearError();
     try {
       final paidAmount = double.tryParse(_paidController.text) ?? (_invoiceType == 'cash' ? _total : 0);
-      final invoiceNumber = 'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+      final now = DateTime.now();
+      final invoiceNumber = 'INV-${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-${now.millisecondsSinceEpoch.remainder(1000000).toString().padLeft(6, '0')}';
       final repo = ref.read(salesRepositoryProvider);
       await repo.create({
         'customer_id': _isWalkIn ? null : _selectedCustomerId,
