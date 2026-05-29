@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -52,10 +53,10 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Expenses',
+                  Text('expenses.title'.tr(),
                       style:
                           TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-                  Text('Track and manage all business expenses',
+                  Text('expenses.subtitle'.tr(),
                       style: TextStyle(
                           fontSize: 13,
                           color: isDark
@@ -70,7 +71,7 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
                   ref.invalidate(expensesSummaryProvider);
                 },
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Refresh'),
+                label: Text('common.refresh'.tr()),
                 style: OutlinedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -82,7 +83,7 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
               FilledButton.icon(
                 onPressed: () => _showAddExpenseDialog(),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Expense'),
+                label: Text('expenses.add_expense'.tr()),
                 style: FilledButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -119,7 +120,7 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Search by name, category, or notes...',
+                      hintText: 'common.search'.tr(),
                       hintStyle: TextStyle(
                           fontSize: 13,
                           color: isDark
@@ -201,7 +202,7 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
                     FilledButton.icon(
                       onPressed: () => ref.invalidate(expensesProvider),
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('Retry'),
+                      label: Text('common.retry'.tr()),
                     ),
                   ],
                 ),
@@ -640,7 +641,7 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
                   color: AppColors.error, size: 20),
             ),
             const SizedBox(width: 12),
-            const Text('Delete Expense',
+            Text('common.delete'.tr(),
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           ],
         ),
@@ -649,12 +650,12 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text('common.cancel'.tr()),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
+            child: Text('common.delete'.tr()),
           ),
         ],
       ),

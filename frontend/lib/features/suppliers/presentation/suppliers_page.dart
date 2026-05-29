@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -31,11 +32,11 @@ class SuppliersPage extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Suppliers', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+              Text('suppliers.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
               ElevatedButton.icon(
                 onPressed: () => _showAddDialog(context),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Supplier'),
+                label: Text('suppliers.add_supplier'.tr()),
               ),
             ],
           ),
@@ -77,7 +78,7 @@ class SuppliersPage extends ConsumerWidget {
                             IconButton(
                               icon: const Icon(Icons.edit, size: 18),
                               onPressed: () => _showEditDialog(context, s),
-                              tooltip: 'Edit',
+                              tooltip: 'common.edit'.tr(),
                             ),
                           ],
                         ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -52,7 +53,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                 // Header
                 Row(
                   children: [
-                    const Text('Purchases', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                    Text('purchases.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
                     const Spacer(),
                     ElevatedButton.icon(
                       onPressed: () async {
@@ -63,7 +64,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                         if (result == true) invalidateAfterPurchase(ref);
                       },
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('New Purchase'),
+                      label: Text('purchases.create_invoice'.tr()),
                     ),
                   ],
                 ),
@@ -72,13 +73,13 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                 // KPIs
                 Row(
                   children: [
-                    _KpiCard(title: 'Total Purchases', value: '${(kpis['totalPurchases'] as double).toStringAsFixed(0)} IQD', icon: Icons.receipt_long, color: AppColors.primary),
+                    _KpiCard(title: 'purchases.total'.tr(), value: '${(kpis['totalPurchases'] as double).toStringAsFixed(0)} IQD', icon: Icons.receipt_long, color: AppColors.primary),
                     const SizedBox(width: 12),
-                    _KpiCard(title: 'Total Paid', value: '${(kpis['totalPaid'] as double).toStringAsFixed(0)} IQD', icon: Icons.check_circle_outline, color: AppColors.success),
+                    _KpiCard(title: 'purchases.paid'.tr(), value: '${(kpis['totalPaid'] as double).toStringAsFixed(0)} IQD', icon: Icons.check_circle_outline, color: AppColors.success),
                     const SizedBox(width: 12),
-                    _KpiCard(title: 'Total Unpaid', value: '${(kpis['totalUnpaid'] as double).toStringAsFixed(0)} IQD', icon: Icons.warning_amber, color: AppColors.error),
+                    _KpiCard(title: 'status.unpaid'.tr(), value: '${(kpis['totalUnpaid'] as double).toStringAsFixed(0)} IQD', icon: Icons.warning_amber, color: AppColors.error),
                     const SizedBox(width: 12),
-                    _KpiCard(title: 'Invoices', value: '${kpis['invoiceCount']}', icon: Icons.description_outlined, color: AppColors.info),
+                    _KpiCard(title: 'purchases.invoice_number'.tr(), value: '${kpis['invoiceCount']}', icon: Icons.description_outlined, color: AppColors.info),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -91,7 +92,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: 'Search by invoice number or supplier...',
+                          hintText: 'common.search'.tr(),
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
@@ -108,27 +109,27 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                     ),
                     const SizedBox(width: 16),
                     _FilterChip(
-                      label: 'All',
+                      label: 'common.all'.tr(),
                       selected: statusFilter == PurchaseStatusFilter.all,
                       onTap: () => ref.read(purchasesStatusFilterProvider.notifier).state = PurchaseStatusFilter.all,
                     ),
                     const SizedBox(width: 8),
                     _FilterChip(
-                      label: 'Paid',
+                      label: 'status.paid'.tr(),
                       selected: statusFilter == PurchaseStatusFilter.paid,
                       color: AppColors.success,
                       onTap: () => ref.read(purchasesStatusFilterProvider.notifier).state = PurchaseStatusFilter.paid,
                     ),
                     const SizedBox(width: 8),
                     _FilterChip(
-                      label: 'Partial',
+                      label: 'status.partial'.tr(),
                       selected: statusFilter == PurchaseStatusFilter.partial,
                       color: AppColors.warning,
                       onTap: () => ref.read(purchasesStatusFilterProvider.notifier).state = PurchaseStatusFilter.partial,
                     ),
                     const SizedBox(width: 8),
                     _FilterChip(
-                      label: 'Unpaid',
+                      label: 'status.unpaid'.tr(),
                       selected: statusFilter == PurchaseStatusFilter.unpaid,
                       color: AppColors.error,
                       onTap: () => ref.read(purchasesStatusFilterProvider.notifier).state = PurchaseStatusFilter.unpaid,
@@ -204,7 +205,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Record Payment'),
+        title: Text('payments.record_payment'.tr()),
         content: SizedBox(
           width: 350,
           child: Column(
@@ -227,7 +228,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('common.cancel'.tr())),
           ElevatedButton(
             onPressed: () async {
               final amount = amountController.text.trim();
@@ -350,7 +351,7 @@ class _InvoiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = invoice.isPaid ? AppColors.success : invoice.isPartial ? AppColors.warning : AppColors.error;
-    final statusLabel = invoice.isPaid ? 'Paid' : invoice.isPartial ? 'Partial' : 'Unpaid';
+    final statusLabel = invoice.isPaid ? 'status.paid'.tr() : invoice.isPartial ? 'status.partial'.tr() : 'status.unpaid'.tr();
     final progress = invoice.total > 0 ? invoice.paid / invoice.total : 0.0;
 
     return GestureDetector(

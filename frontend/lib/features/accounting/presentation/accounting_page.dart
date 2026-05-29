@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -49,7 +50,7 @@ class _AccountingPageState extends ConsumerState<AccountingPage> with SingleTick
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Accounting', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                  Text('accounting.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
                   Text('General ledger, trial balance & chart of accounts', style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)),
                 ],
               ),
@@ -61,7 +62,7 @@ class _AccountingPageState extends ConsumerState<AccountingPage> with SingleTick
                   ref.invalidate(accountsProvider);
                 },
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Refresh'),
+                label: Text('common.refresh'.tr()),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -87,10 +88,10 @@ class _AccountingPageState extends ConsumerState<AccountingPage> with SingleTick
               unselectedLabelColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
-              tabs: const [
-                Tab(text: 'Trial Balance', icon: Icon(Icons.balance_rounded, size: 18)),
-                Tab(text: 'Ledger', icon: Icon(Icons.list_alt_rounded, size: 18)),
-                Tab(text: 'Accounts', icon: Icon(Icons.account_tree_rounded, size: 18)),
+              tabs: [
+                Tab(text: 'accounting.trial_balance'.tr(), icon: Icon(Icons.balance_rounded, size: 18)),
+                Tab(text: 'accounting.ledger'.tr(), icon: Icon(Icons.list_alt_rounded, size: 18)),
+                Tab(text: 'accounting.accounts'.tr(), icon: Icon(Icons.account_tree_rounded, size: 18)),
               ],
             ),
           ),
@@ -135,7 +136,7 @@ class _TrialBalanceTab extends ConsumerWidget {
             FilledButton.icon(
               onPressed: () => ref.invalidate(trialBalanceProvider),
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
+              label: Text('common.retry'.tr()),
             ),
           ],
         ),
@@ -176,12 +177,12 @@ class _TrialBalanceTab extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    _headerCell('Code', flex: 1),
-                    _headerCell('Account Name', flex: 3),
-                    _headerCell('Type', flex: 2),
-                    _headerCell('Debit', flex: 2, align: TextAlign.right),
-                    _headerCell('Credit', flex: 2, align: TextAlign.right),
-                    _headerCell('Balance', flex: 2, align: TextAlign.right),
+                    _headerCell('accounting.account_code'.tr(), flex: 1),
+                    _headerCell('accounting.account_name'.tr(), flex: 3),
+                    _headerCell('accounting.account_type'.tr(), flex: 2),
+                    _headerCell('accounting.debit'.tr(), flex: 2, align: TextAlign.right),
+                    _headerCell('accounting.credit'.tr(), flex: 2, align: TextAlign.right),
+                    _headerCell('accounting.balance'.tr(), flex: 2, align: TextAlign.right),
                   ],
                 ),
               ),
@@ -294,7 +295,7 @@ class _LedgerTab extends ConsumerWidget {
             FilledButton.icon(
               onPressed: () => ref.invalidate(ledgerEntriesProvider),
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
+              label: Text('common.retry'.tr()),
             ),
           ],
         ),
@@ -331,11 +332,11 @@ class _LedgerTab extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    _headerCell('Date', flex: 2),
-                    _headerCell('Description', flex: 4),
-                    _headerCell('Entity', flex: 2),
-                    _headerCell('Debit', flex: 2, align: TextAlign.right),
-                    _headerCell('Credit', flex: 2, align: TextAlign.right),
+                    _headerCell('accounting.entry_date'.tr(), flex: 2),
+                    _headerCell('accounting.description'.tr(), flex: 4),
+                    _headerCell('accounting.entity'.tr(), flex: 2),
+                    _headerCell('accounting.debit'.tr(), flex: 2, align: TextAlign.right),
+                    _headerCell('accounting.credit'.tr(), flex: 2, align: TextAlign.right),
                   ],
                 ),
               ),
@@ -438,7 +439,7 @@ class _AccountsTab extends ConsumerWidget {
             FilledButton.icon(
               onPressed: () => ref.invalidate(accountsProvider),
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
+              label: Text('common.retry'.tr()),
             ),
           ],
         ),
@@ -475,10 +476,10 @@ class _AccountsTab extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    _headerCell('Code', flex: 1),
-                    _headerCell('Account Name', flex: 4),
-                    _headerCell('Type', flex: 2),
-                    _headerCell('System', flex: 1, align: TextAlign.center),
+                    _headerCell('accounting.account_code'.tr(), flex: 1),
+                    _headerCell('accounting.account_name'.tr(), flex: 4),
+                    _headerCell('accounting.account_type'.tr(), flex: 2),
+                    _headerCell('accounting.system_account'.tr(), flex: 1, align: TextAlign.center),
                   ],
                 ),
               ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -103,7 +104,7 @@ class _SalesPageState extends ConsumerState<SalesPage> {
             controller: _searchController,
             onChanged: (v) => ref.read(salesSearchProvider.notifier).state = v,
             decoration: InputDecoration(
-              hintText: 'Search invoice / customer...',
+              hintText: 'common.search'.tr(),
               prefixIcon: const Icon(Icons.search, size: 20),
               isDense: true,
               filled: true,
@@ -118,19 +119,19 @@ class _SalesPageState extends ConsumerState<SalesPage> {
         ElevatedButton.icon(
           onPressed: _openCreateSale,
           icon: const Icon(Icons.add, size: 18),
-          label: const Text('New Sale'),
+          label: Text('sales.create_invoice'.tr()),
         ),
         IconButton(
           onPressed: _openAiDialog,
           icon: const Icon(Icons.smart_toy_outlined),
-          tooltip: 'AI Sales Assistant',
+          tooltip: 'ai.title'.tr(),
           style: IconButton.styleFrom(
               backgroundColor: AppColors.primary.withOpacity(0.1)),
         ),
         IconButton(
           onPressed: () => ref.invalidate(salesProvider),
           icon: const Icon(Icons.refresh),
-          tooltip: 'Refresh',
+          tooltip: 'common.refresh'.tr(),
         ),
       ],
     );
@@ -143,35 +144,35 @@ class _SalesPageState extends ConsumerState<SalesPage> {
         children: [
           _KpiCard(
               icon: Icons.payments,
-              label: 'Total Sales',
+              label: 'sales.total'.tr(),
               value: _formatCurrency(kpis.totalSales),
               color: AppColors.primary,
               isDark: isDark),
           const SizedBox(width: 12),
           _KpiCard(
               icon: Icons.receipt_long,
-              label: 'Invoices',
+              label: 'sales.invoice_number'.tr(),
               value: '${kpis.invoiceCount}',
               color: AppColors.info,
               isDark: isDark),
           const SizedBox(width: 12),
           _KpiCard(
               icon: Icons.money,
-              label: 'Cash',
+              label: 'sales.cash'.tr(),
               value: '${kpis.cashPercentage.toStringAsFixed(0)}%',
               color: AppColors.success,
               isDark: isDark),
           const SizedBox(width: 12),
           _KpiCard(
               icon: Icons.credit_card,
-              label: 'Credit',
+              label: 'sales.credit'.tr(),
               value: '${kpis.creditPercentage.toStringAsFixed(0)}%',
               color: AppColors.warning,
               isDark: isDark),
           const SizedBox(width: 12),
           _KpiCard(
               icon: Icons.warning_amber,
-              label: 'Unpaid',
+              label: 'status.unpaid'.tr(),
               value: _formatCurrency(kpis.totalUnpaid),
               color: AppColors.error,
               isDark: isDark),
@@ -212,7 +213,7 @@ class _SalesPageState extends ConsumerState<SalesPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('AI Insights',
+                Text('dashboard.ai_insights'.tr(),
                     style:
                         TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 const SizedBox(height: 4),
@@ -243,42 +244,42 @@ class _SalesPageState extends ConsumerState<SalesPage> {
       runSpacing: 8,
       children: [
         _FilterChip(
-            label: 'All',
+            label: 'common.all'.tr(),
             selected: statusFilter == PaymentStatusFilter.all,
             onTap: () => ref.read(salesStatusFilterProvider.notifier).state =
                 PaymentStatusFilter.all),
         _FilterChip(
-            label: 'Paid',
+            label: 'status.paid'.tr(),
             selected: statusFilter == PaymentStatusFilter.paid,
             color: AppColors.success,
             onTap: () => ref.read(salesStatusFilterProvider.notifier).state =
                 PaymentStatusFilter.paid),
         _FilterChip(
-            label: 'Partial',
+            label: 'status.partial'.tr(),
             selected: statusFilter == PaymentStatusFilter.partial,
             color: AppColors.warning,
             onTap: () => ref.read(salesStatusFilterProvider.notifier).state =
                 PaymentStatusFilter.partial),
         _FilterChip(
-            label: 'Unpaid',
+            label: 'status.unpaid'.tr(),
             selected: statusFilter == PaymentStatusFilter.unpaid,
             color: AppColors.error,
             onTap: () => ref.read(salesStatusFilterProvider.notifier).state =
                 PaymentStatusFilter.unpaid),
         const SizedBox(width: 16),
         _FilterChip(
-            label: 'All Types',
+            label: 'common.all'.tr(),
             selected: typeFilter == InvoiceTypeFilter.all,
             onTap: () => ref.read(salesTypeFilterProvider.notifier).state =
                 InvoiceTypeFilter.all),
         _FilterChip(
-            label: 'Cash',
+            label: 'sales.cash'.tr(),
             selected: typeFilter == InvoiceTypeFilter.cash,
             color: AppColors.success,
             onTap: () => ref.read(salesTypeFilterProvider.notifier).state =
                 InvoiceTypeFilter.cash),
         _FilterChip(
-            label: 'Credit',
+            label: 'sales.credit'.tr(),
             selected: typeFilter == InvoiceTypeFilter.credit,
             color: AppColors.warning,
             onTap: () => ref.read(salesTypeFilterProvider.notifier).state =
@@ -363,7 +364,7 @@ class _SalesPageState extends ConsumerState<SalesPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              onPressed: () => Navigator.pop(ctx), child: Text('common.cancel'.tr())),
           ElevatedButton(
             onPressed: () async {
               final amount = double.tryParse(amountController.text);
@@ -411,7 +412,7 @@ class _SalesPageState extends ConsumerState<SalesPage> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text('common.cancel'.tr())),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF25D366)),
@@ -576,10 +577,10 @@ class _InvoiceCard extends StatelessWidget {
             ? AppColors.warning
             : AppColors.error;
     final statusLabel = invoice.isPaid
-        ? 'Paid'
+        ? 'status.paid'.tr()
         : invoice.isPartial
-            ? 'Partial'
-            : 'Unpaid';
+            ? 'status.partial'.tr()
+            : 'status.unpaid'.tr();
 
     return GestureDetector(
       onTap: onTap,

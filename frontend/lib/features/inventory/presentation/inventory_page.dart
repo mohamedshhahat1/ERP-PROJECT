@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -99,7 +100,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: 'Search product, SKU, or barcode...',
+                          hintText: 'common.search'.tr(),
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -134,13 +135,13 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                     ElevatedButton.icon(
                       onPressed: _showOpeningStockDialog,
                       icon: const Icon(Icons.inventory_2, size: 18),
-                      label: const Text('Opening Stock'),
+                      label: Text('inventory.add_stock'.tr()),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
                       onPressed: _showAiDialog,
                       icon: const Icon(Icons.smart_toy, size: 18),
-                      label: const Text('Ask AI'),
+                      label: Text('dashboard.ai_insights'.tr()),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         side: const BorderSide(color: AppColors.primary),
@@ -150,7 +151,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                     IconButton(
                       onPressed: _refreshStock,
                       icon: const Icon(Icons.refresh),
-                      tooltip: 'Refresh stock',
+                      tooltip: 'common.refresh'.tr(),
                     ),
                     const Spacer(),
                     IconButton(
@@ -165,13 +166,13 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                 // KPI Row
                 Row(
                   children: [
-                    _KpiCard(icon: Icons.attach_money, label: '\$${_formatNumber(kpis['totalValue'])}', subtitle: 'Total Value', color: AppColors.primary),
+                    _KpiCard(icon: Icons.attach_money, label: '\$${_formatNumber(kpis['totalValue'])}', subtitle: 'inventory.total_value'.tr(), color: AppColors.primary),
                     const SizedBox(width: 12),
-                    _KpiCard(icon: Icons.check_circle, label: '${kpis['inStock']}', subtitle: 'In Stock', color: AppColors.success),
+                    _KpiCard(icon: Icons.check_circle, label: '${kpis['inStock']}', subtitle: 'inventory.quantity'.tr(), color: AppColors.success),
                     const SizedBox(width: 12),
-                    _KpiCard(icon: Icons.warning_amber, label: '${kpis['lowStock']}', subtitle: 'Low Stock', color: AppColors.warning),
+                    _KpiCard(icon: Icons.warning_amber, label: '${kpis['lowStock']}', subtitle: 'inventory.low_stock_items'.tr(), color: AppColors.warning),
                     const SizedBox(width: 12),
-                    _KpiCard(icon: Icons.error_outline, label: '${kpis['outOfStock']}', subtitle: 'Out of Stock', color: AppColors.error),
+                    _KpiCard(icon: Icons.error_outline, label: '${kpis['outOfStock']}', subtitle: 'status.inactive'.tr(), color: AppColors.error),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -201,7 +202,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                       TextButton.icon(
                         onPressed: _showAiDialog,
                         icon: const Icon(Icons.smart_toy, size: 16),
-                        label: const Text('Ask AI', style: TextStyle(fontSize: 12)),
+                        label: Text('dashboard.ai_insights'.tr(), style: TextStyle(fontSize: 12)),
                       ),
                     ],
                   ),
@@ -213,13 +214,13 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _StatusChip(label: 'All', selected: statusFilter == null, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = null),
+                      _StatusChip(label: 'common.all'.tr(), selected: statusFilter == null, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = null),
                       const SizedBox(width: 8),
-                      _StatusChip(label: 'In Stock', selected: statusFilter == StockStatus.normal, color: AppColors.success, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = StockStatus.normal),
+                      _StatusChip(label: 'inventory.quantity'.tr(), selected: statusFilter == StockStatus.normal, color: AppColors.success, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = StockStatus.normal),
                       const SizedBox(width: 8),
-                      _StatusChip(label: 'Low Stock', selected: statusFilter == StockStatus.low, color: AppColors.warning, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = StockStatus.low),
+                      _StatusChip(label: 'inventory.low_stock_items'.tr(), selected: statusFilter == StockStatus.low, color: AppColors.warning, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = StockStatus.low),
                       const SizedBox(width: 8),
-                      _StatusChip(label: 'Out of Stock', selected: statusFilter == StockStatus.outOfStock, color: AppColors.error, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = StockStatus.outOfStock),
+                      _StatusChip(label: 'status.inactive'.tr(), selected: statusFilter == StockStatus.outOfStock, color: AppColors.error, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = StockStatus.outOfStock),
                       const SizedBox(width: 8),
                       _StatusChip(label: 'Overstock', selected: statusFilter == StockStatus.overstock, color: AppColors.info, onTap: () => ref.read(inventoryStatusFilterProvider.notifier).state = StockStatus.overstock),
                     ],
@@ -504,14 +505,14 @@ class _TransferDialogState extends State<_TransferDialog> {
           children: [
             DropdownButtonFormField<int>(
               value: _fromWarehouse,
-              decoration: const InputDecoration(labelText: 'From Warehouse'),
+              decoration: InputDecoration(labelText: 'inventory.warehouse'.tr()),
               items: warehouses.map((w) => DropdownMenuItem(value: w.warehouseId, child: Text(w.warehouseName))).toList(),
               onChanged: (v) => setState(() => _fromWarehouse = v),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               value: _toWarehouse,
-              decoration: const InputDecoration(labelText: 'To Warehouse'),
+              decoration: InputDecoration(labelText: 'inventory.warehouse'.tr()),
               items: warehouses.map((w) => DropdownMenuItem(value: w.warehouseId, child: Text(w.warehouseName))).toList(),
               onChanged: (v) => setState(() => _toWarehouse = v),
             ),
@@ -525,7 +526,7 @@ class _TransferDialogState extends State<_TransferDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('common.cancel'.tr())),
         ElevatedButton(
           onPressed: _loading ? null : () async {
             if (_fromWarehouse == null || _toWarehouse == null || _qtyController.text.isEmpty) return;
@@ -554,7 +555,7 @@ class _TransferDialogState extends State<_TransferDialog> {
               if (mounted) setState(() => _loading = false);
             }
           },
-          child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Transfer'),
+          child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text('inventory.transfer'.tr()),
         ),
       ],
     );
@@ -596,9 +597,9 @@ class _AdjustStockDialogState extends State<_AdjustStockDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'in', label: Text('Add Stock'), icon: Icon(Icons.add_circle_outline)),
-                ButtonSegment(value: 'out', label: Text('Deduct Stock'), icon: Icon(Icons.remove_circle_outline)),
+              segments: [
+                ButtonSegment(value: 'in', label: Text('inventory.add_stock'.tr()), icon: Icon(Icons.add_circle_outline)),
+                ButtonSegment(value: 'out', label: Text('inventory.deduct_stock'.tr()), icon: Icon(Icons.remove_circle_outline)),
               ],
               selected: {_direction},
               onSelectionChanged: (s) => setState(() => _direction = s.first),
@@ -606,7 +607,7 @@ class _AdjustStockDialogState extends State<_AdjustStockDialog> {
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               value: _warehouse,
-              decoration: const InputDecoration(labelText: 'Warehouse'),
+              decoration: InputDecoration(labelText: 'inventory.warehouse'.tr()),
               items: warehouses.map((w) => DropdownMenuItem(value: w.warehouseId, child: Text(w.warehouseName))).toList(),
               onChanged: (v) => setState(() => _warehouse = v),
             ),
@@ -626,7 +627,7 @@ class _AdjustStockDialogState extends State<_AdjustStockDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('common.cancel'.tr())),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: _direction == 'out' ? AppColors.error : AppColors.success),
           onPressed: _loading ? null : () async {
@@ -700,7 +701,7 @@ class _AddStockDialogState extends State<_AddStockDialog> {
           children: [
             DropdownButtonFormField<int>(
               value: _warehouse,
-              decoration: const InputDecoration(labelText: 'Warehouse *'),
+              decoration: InputDecoration(labelText: 'inventory.warehouse'.tr()),
               items: warehouses.map((w) => DropdownMenuItem(value: w.warehouseId, child: Text(w.warehouseName))).toList(),
               onChanged: (v) => setState(() => _warehouse = v),
             ),
@@ -725,7 +726,7 @@ class _AddStockDialogState extends State<_AddStockDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('common.cancel'.tr())),
         ElevatedButton.icon(
           icon: const Icon(Icons.add, size: 18),
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
@@ -809,7 +810,7 @@ class _DeductStockDialogState extends State<_DeductStockDialog> {
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               value: _warehouse,
-              decoration: const InputDecoration(labelText: 'From Warehouse *'),
+              decoration: InputDecoration(labelText: 'inventory.warehouse'.tr()),
               items: warehouses.map((w) => DropdownMenuItem(value: w.warehouseId, child: Text(w.warehouseName))).toList(),
               onChanged: (v) => setState(() => _warehouse = v),
             ),
@@ -829,7 +830,7 @@ class _DeductStockDialogState extends State<_DeductStockDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('common.cancel'.tr())),
         ElevatedButton.icon(
           icon: const Icon(Icons.remove, size: 18),
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
@@ -1007,7 +1008,7 @@ class _StockHistoryDialogState extends State<_StockHistoryDialog> {
                       ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('common.close'.tr())),
       ],
     );
   }
@@ -1105,7 +1106,7 @@ class _AlertsDialogState extends State<_AlertsDialog> {
                   ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('common.close'.tr())),
       ],
     );
   }
@@ -1182,7 +1183,7 @@ class _InventoryAiDialogState extends State<_InventoryAiDialog> {
           ],
         ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('common.close'.tr()))],
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -41,17 +42,17 @@ class _WhatsAppPageState extends ConsumerState<WhatsAppPage> with SingleTickerPr
               unselectedLabelColor: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
               indicatorColor: const Color(0xFF25D366),
               indicatorWeight: 3,
-              tabs: const [
-                Tab(icon: Icon(Icons.send, size: 20), text: 'Send Message'),
-                Tab(icon: Icon(Icons.notification_important, size: 20), text: 'Reminders'),
-                Tab(icon: Icon(Icons.settings, size: 20), text: 'Settings'),
+              tabs: [
+                Tab(icon: Icon(Icons.send, size: 20), text: 'whatsapp.send_message'.tr()),
+                Tab(icon: Icon(Icons.notification_important, size: 20), text: 'whatsapp.send_reminders'.tr()),
+                Tab(icon: Icon(Icons.settings, size: 20), text: 'whatsapp.settings_tab'.tr()),
               ],
             ),
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: const [
+              children: [
                 _SendMessageTab(),
                 _RemindersTab(),
                 _SettingsTab(),

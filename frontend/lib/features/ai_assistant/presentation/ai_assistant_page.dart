@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -59,7 +60,7 @@ class _AIAssistantPageState extends ConsumerState<AIAssistantPage> {
             children: [
               const Icon(Icons.smart_toy_rounded, color: AppColors.primary),
               const SizedBox(width: 8),
-              const Text('AI Assistant', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+              Text('ai.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -70,12 +71,12 @@ class _AIAssistantPageState extends ConsumerState<AIAssistantPage> {
               TextButton.icon(
                 onPressed: () => ref.read(aiChatProvider.notifier).clearChat(),
                 icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('Clear Chat'),
+                label: Text('ai.clear_chat'.tr()),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text('Ask about sales, inventory, profits, or customers', style: TextStyle(color: AppColors.textSecondary)),
+          Text('ai.subtitle'.tr(), style: TextStyle(color: AppColors.textSecondary)),
           const SizedBox(height: 16),
 
           // Chat area
@@ -123,7 +124,7 @@ class _AIAssistantPageState extends ConsumerState<AIAssistantPage> {
                             focusNode: _focusNode,
                             enabled: !chatState.isLoading,
                             decoration: InputDecoration(
-                              hintText: chatState.isLoading ? 'AI is thinking...' : 'Ask anything about your business...',
+                              hintText: chatState.isLoading ? 'ai.thinking'.tr() : 'ai.placeholder'.tr(),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                               filled: true,
                               fillColor: isDark ? AppColors.darkBackground : AppColors.background,

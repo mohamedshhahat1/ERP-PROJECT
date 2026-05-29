@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -43,7 +44,7 @@ class _OpeningBalancesPageState extends ConsumerState<OpeningBalancesPage> with 
               children: [
                 const Icon(Icons.account_balance_wallet, color: AppColors.primary, size: 28),
                 const SizedBox(width: 12),
-                const Text('Opening Balances', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                Text('opening_balances.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
                 const Spacer(),
                 _LockStatusWidget(),
               ],
@@ -68,7 +69,7 @@ class _OpeningBalancesPageState extends ConsumerState<OpeningBalancesPage> with 
               unselectedLabelColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
-              tabs: const [
+              tabs: [
                 Tab(text: 'Customers', icon: Icon(Icons.people_outline, size: 18)),
                 Tab(text: 'Suppliers', icon: Icon(Icons.local_shipping_outlined, size: 18)),
                 Tab(text: 'Cash / Bank', icon: Icon(Icons.account_balance_outlined, size: 18)),
@@ -191,7 +192,7 @@ class _CustomerOpeningBalanceTabState extends ConsumerState<_CustomerOpeningBala
                     child: const Icon(Icons.person_outline, color: AppColors.primary, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Customer Opening Balance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text('opening_balances.customer_balance'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -285,7 +286,7 @@ class _CustomerOpeningBalanceTabState extends ConsumerState<_CustomerOpeningBala
                   icon: _isLoading
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.save),
-                  label: const Text('Save Opening Balance'),
+                  label: Text('common.save'.tr()),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
@@ -395,7 +396,7 @@ class _SupplierOpeningBalanceTabState extends ConsumerState<_SupplierOpeningBala
                     child: const Icon(Icons.local_shipping_outlined, color: AppColors.info, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Supplier Opening Balance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text('opening_balances.supplier_balance'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -484,7 +485,7 @@ class _SupplierOpeningBalanceTabState extends ConsumerState<_SupplierOpeningBala
                   icon: _isLoading
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.save),
-                  label: const Text('Save Opening Balance'),
+                  label: Text('common.save'.tr()),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
@@ -584,7 +585,7 @@ class _CashOpeningBalanceTabState extends ConsumerState<_CashOpeningBalanceTab> 
                     child: const Icon(Icons.account_balance, color: AppColors.success, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Cash / Bank Opening Balance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text('opening_balances.cash_balance'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -640,7 +641,7 @@ class _CashOpeningBalanceTabState extends ConsumerState<_CashOpeningBalanceTab> 
                   icon: _isLoading
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.save),
-                  label: const Text('Save Opening Balance'),
+                  label: Text('common.save'.tr()),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
@@ -690,7 +691,7 @@ class _LockStatusWidget extends ConsumerWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                isLocked ? 'Locked' : 'Unlocked',
+                isLocked ? 'opening_balances.locked'.tr() : 'opening_balances.unlocked'.tr(),
                 style: TextStyle(
                   fontSize: 12,
                   color: isLocked ? AppColors.error : AppColors.success,
@@ -724,7 +725,7 @@ class _LockStatusWidget extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text('common.cancel'.tr()),
           ),
           FilledButton(
             onPressed: () async {

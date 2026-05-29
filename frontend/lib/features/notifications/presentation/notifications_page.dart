@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -26,7 +27,7 @@ class NotificationsPage extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Notifications', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                  Text('notifications.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   unreadAsync.when(
                     data: (count) => Text('$count unread notification${count == 1 ? '' : 's'}', style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary, fontSize: 14)),
@@ -39,13 +40,13 @@ class NotificationsPage extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () => _runChecks(context, ref),
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Check Alerts'),
+                label: Text('common.refresh'.tr()),
               ),
               const SizedBox(width: 12),
               FilledButton.icon(
                 onPressed: () => _markAllRead(context, ref),
                 icon: const Icon(Icons.done_all, size: 18),
-                label: const Text('Mark All Read'),
+                label: Text('notifications.mark_all_read'.tr()),
               ),
             ],
           ),

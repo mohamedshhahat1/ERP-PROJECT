@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -37,7 +38,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
         onPressed: () => _sendReportToOwner(context),
         backgroundColor: const Color(0xFF25D366),
         icon: const Icon(Icons.chat, color: Colors.white),
-        label: const Text('Send Report', style: TextStyle(color: Colors.white)),
+        label: Text('whatsapp.send_message'.tr(), style: const TextStyle(color: Colors.white)),
       ),
       body: Column(
         children: [
@@ -51,23 +52,23 @@ class _ReportsPageState extends ConsumerState<ReportsPage>
                   : AppColors.textSecondary,
               indicatorColor: AppColors.primary,
               indicatorWeight: 3,
-              tabs: const [
+              tabs: [
                 Tab(
                     icon: Icon(Icons.trending_up, size: 20),
-                    text: 'Operational'),
+                    text: 'reports.title'.tr()),
                 Tab(
                     icon: Icon(Icons.account_balance, size: 20),
-                    text: 'Financial'),
+                    text: 'reports.profit_loss'.tr()),
                 Tab(
                     icon: Icon(Icons.psychology, size: 20),
-                    text: 'AI Insights'),
+                    text: 'dashboard.ai_insights'.tr()),
               ],
             ),
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: const [
+              children: [
                 _OperationalTab(),
                 _FinancialTab(),
                 _AiInsightsTab(),
@@ -200,11 +201,11 @@ class _OperationalTabState extends State<_OperationalTab>
             indicatorColor: AppColors.primary,
             indicatorWeight: 2,
             tabAlignment: TabAlignment.start,
-            tabs: const [
-              Tab(text: 'Daily Operations'),
-              Tab(text: 'Daily Sales'),
+            tabs: [
+              Tab(text: 'reports.daily_sales'.tr()),
+              Tab(text: 'reports.daily_sales'.tr()),
               Tab(text: 'Sales by Period'),
-              Tab(text: 'Top Products'),
+              Tab(text: 'reports.top_products'.tr()),
               Tab(text: 'Product Performance'),
               Tab(text: 'Inventory Valuation'),
               Tab(text: 'Low Stock'),
@@ -216,7 +217,7 @@ class _OperationalTabState extends State<_OperationalTab>
         Expanded(
           child: TabBarView(
             controller: _subTabController,
-            children: const [
+            children: [
               _DailyOperationsReport(),
               _DailySalesReport(),
               _SalesByPeriodReport(),
@@ -279,10 +280,10 @@ class _FinancialTabState extends State<_FinancialTab>
             indicatorColor: AppColors.primary,
             indicatorWeight: 2,
             tabAlignment: TabAlignment.start,
-            tabs: const [
-              Tab(text: 'Profit & Loss'),
-              Tab(text: 'Monthly Profit'),
-              Tab(text: 'Cash Flow'),
+            tabs: [
+              Tab(text: 'reports.profit_loss'.tr()),
+              Tab(text: 'reports.monthly_profit'.tr()),
+              Tab(text: 'reports.cash_flow'.tr()),
               Tab(text: 'Customer Balances'),
               Tab(text: 'Supplier Balances'),
               Tab(text: 'Expenses'),
@@ -292,7 +293,7 @@ class _FinancialTabState extends State<_FinancialTab>
         Expanded(
           child: TabBarView(
             controller: _subTabController,
-            children: const [
+            children: [
               _ProfitLossReport(),
               _MonthlyProfitReport(),
               _CashFlowReport(),
@@ -352,7 +353,7 @@ class _AiInsightsTabState extends State<_AiInsightsTab>
             indicatorColor: AppColors.primary,
             indicatorWeight: 2,
             tabAlignment: TabAlignment.start,
-            tabs: const [
+            tabs: [
               Tab(text: 'Customer Segmentation'),
               Tab(text: 'Risk Assessment'),
               Tab(text: 'AI Summary'),
@@ -362,7 +363,7 @@ class _AiInsightsTabState extends State<_AiInsightsTab>
         Expanded(
           child: TabBarView(
             controller: _subTabController,
-            children: const [
+            children: [
               _CustomerSegmentationReport(),
               _RiskAssessmentReport(),
               _AiSummaryReport(),
@@ -717,7 +718,7 @@ class _DailyOperationsReport extends ConsumerWidget {
                     _sectionTitle('Top Products Today'),
                     const SizedBox(height: 8),
                     _buildTable(isDark,
-                        columns: const [
+                        columns: [
                           DataColumn(
                               label: Text('Product',
                                   style:
@@ -830,7 +831,7 @@ class _DailySalesReport extends ConsumerWidget {
               final days = (data['data'] as List?) ?? [];
               if (days.isEmpty) return const Text('No sales data available');
               return _buildTable(isDark,
-                  columns: const [
+                  columns: [
                     DataColumn(
                         label: Text('Date',
                             style: TextStyle(fontWeight: FontWeight.w600))),
@@ -930,7 +931,7 @@ class _SalesByPeriodReport extends ConsumerWidget {
                   ]),
                   const SizedBox(height: 16),
                   _buildTable(isDark,
-                      columns: const [
+                      columns: [
                         DataColumn(
                             label: Text('Period',
                                 style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1020,7 +1021,7 @@ class _TopProductsReport extends ConsumerWidget {
               final products = (data['data'] as List?) ?? [];
               if (products.isEmpty) return const Text('No product data');
               return _buildTable(isDark,
-                  columns: const [
+                  columns: [
                     DataColumn(
                         label: Text('#',
                             style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1115,7 +1116,7 @@ class _ProductPerformanceReport extends ConsumerWidget {
                   ]),
                   const SizedBox(height: 16),
                   _buildTable(isDark,
-                      columns: const [
+                      columns: [
                         DataColumn(
                             label: Text('Product',
                                 style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1212,7 +1213,7 @@ class _InventoryValuationReport extends ConsumerWidget {
                       valuation['grand_total_value'], AppColors.info),
                   const SizedBox(height: 16),
                   _buildTable(isDark,
-                      columns: const [
+                      columns: [
                         DataColumn(
                             label: Text('Warehouse',
                                 style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1312,7 +1313,7 @@ class _LowStockReport extends ConsumerWidget {
                   const SizedBox(height: 16),
                   if (lowStock.isNotEmpty)
                     _buildTable(isDark,
-                        columns: const [
+                        columns: [
                           DataColumn(
                               label: Text('Product',
                                   style:
@@ -1406,7 +1407,7 @@ class _StockMovementReport extends ConsumerWidget {
               final products = (reportData['products'] as List?) ?? [];
               if (products.isEmpty) return const Text('No movements');
               return _buildTable(isDark,
-                  columns: const [
+                  columns: [
                     DataColumn(
                         label: Text('Product',
                             style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1494,7 +1495,7 @@ class _DeadStockReport extends ConsumerWidget {
                   const SizedBox(height: 16),
                   if (items.isNotEmpty)
                     _buildTable(isDark,
-                        columns: const [
+                        columns: [
                           DataColumn(
                               label: Text('Product',
                                   style:
@@ -1608,7 +1609,7 @@ class _ProfitLossReport extends ConsumerWidget {
                         netProfit >= 0 ? AppColors.success : AppColors.error),
                   ]),
                   const SizedBox(height: 24),
-                  _buildTable(isDark, columns: const [
+                  _buildTable(isDark, columns: [
                     DataColumn(
                         label: Text('Item',
                             style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1721,7 +1722,7 @@ class _MonthlyProfitReport extends ConsumerWidget {
               final months = (data['data'] as List?) ?? [];
               if (months.isEmpty) return const Text('No profit data');
               return _buildTable(isDark,
-                  columns: const [
+                  columns: [
                     DataColumn(
                         label: Text('Month',
                             style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1823,7 +1824,7 @@ class _CashFlowReport extends ConsumerWidget {
                   ]),
                   const SizedBox(height: 16),
                   _buildTable(isDark,
-                      columns: const [
+                      columns: [
                         DataColumn(
                             label: Text('Date',
                                 style: TextStyle(fontWeight: FontWeight.w600))),
@@ -1915,7 +1916,7 @@ class _CustomerBalancesReport extends ConsumerWidget {
                       AppColors.warning),
                   const SizedBox(height: 16),
                   _buildTable(isDark,
-                      columns: const [
+                      columns: [
                         DataColumn(
                             label: Text('Customer',
                                 style: TextStyle(fontWeight: FontWeight.w600))),
@@ -2027,7 +2028,7 @@ class _SupplierBalancesReport extends ConsumerWidget {
                       'Total Payables', data['total_payable'], AppColors.error),
                   const SizedBox(height: 16),
                   _buildTable(isDark,
-                      columns: const [
+                      columns: [
                         DataColumn(
                             label: Text('Supplier',
                                 style: TextStyle(fontWeight: FontWeight.w600))),
@@ -2110,7 +2111,7 @@ class _ExpenseByCategoryReport extends ConsumerWidget {
                   const SizedBox(height: 16),
                   if (categories.isNotEmpty)
                     _buildTable(isDark,
-                        columns: const [
+                        columns: [
                           DataColumn(
                               label: Text('Category',
                                   style:
@@ -2246,7 +2247,7 @@ class _CustomerSegmentationReport extends ConsumerWidget {
                             fontSize: 14, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     _buildTable(isDark,
-                        columns: const [
+                        columns: [
                           DataColumn(
                               label: Text('Customer',
                                   style:
@@ -2279,7 +2280,7 @@ class _CustomerSegmentationReport extends ConsumerWidget {
                             color: AppColors.error)),
                     const SizedBox(height: 8),
                     _buildTable(isDark,
-                        columns: const [
+                        columns: [
                           DataColumn(
                               label: Text('Customer',
                                   style:

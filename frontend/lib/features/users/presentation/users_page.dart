@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -37,15 +38,15 @@ class _UsersPageState extends ConsumerState<UsersPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('User Management', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-                  Text('Manage system users and permissions', style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)),
+                  Text('users.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                  Text('users.subtitle'.tr(), style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)),
                 ],
               ),
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => ref.invalidate(usersProvider),
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Refresh'),
+                label: Text('common.refresh'.tr()),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -55,7 +56,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
               FilledButton.icon(
                 onPressed: () => _showCreateUserDialog(),
                 icon: const Icon(Icons.person_add, size: 18),
-                label: const Text('Add User'),
+                label: Text('users.create_user'.tr()),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -83,7 +84,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                     FilledButton.icon(
                       onPressed: () => ref.invalidate(usersProvider),
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('Retry'),
+                      label: Text('common.retry'.tr()),
                     ),
                   ],
                 ),
@@ -134,11 +135,11 @@ class _UsersPageState extends ConsumerState<UsersPage> {
             ),
             child: Row(
               children: [
-                _headerCell('Full Name', flex: 3),
-                _headerCell('Username', flex: 2),
-                _headerCell('Role', flex: 2),
-                _headerCell('Status', flex: 2),
-                _headerCell('Actions', flex: 3, align: TextAlign.center),
+                _headerCell('users.full_name'.tr(), flex: 3),
+                _headerCell('users.username'.tr(), flex: 2),
+                _headerCell('users.role'.tr(), flex: 2),
+                _headerCell('users.status'.tr(), flex: 2),
+                _headerCell('common.edit'.tr(), flex: 3, align: TextAlign.center),
               ],
             ),
           ),
@@ -265,7 +266,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          user.activeStatus ? 'Active' : 'Inactive',
+                          user.activeStatus ? 'users.active'.tr() : 'users.inactive'.tr(),
                           style: TextStyle(fontSize: 12, color: user.activeStatus ? AppColors.success : AppColors.error, fontWeight: FontWeight.w600),
                         ),
                       ],
@@ -366,12 +367,12 @@ class _UsersPageState extends ConsumerState<UsersPage> {
               child: const Icon(Icons.lock_reset, color: AppColors.warning, size: 20),
             ),
             const SizedBox(width: 12),
-            const Text('Reset Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text('users.reset_password'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           ],
         ),
         content: Text('Reset password for "${user.fullName}"? A new password will be generated.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('common.cancel'.tr())),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
@@ -450,7 +451,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                 child: const Icon(Icons.person_add, color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
-              const Text('Create New User', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              Text('users.create_user'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             ],
           ),
           content: SizedBox(
@@ -495,7 +496,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text('common.cancel'.tr())),
             FilledButton(
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
@@ -522,7 +523,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                   }
                 }
               },
-              child: const Text('Create User'),
+              child: Text('users.create_user'.tr()),
             ),
           ],
         ),

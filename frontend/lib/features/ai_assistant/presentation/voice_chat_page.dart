@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -223,7 +224,7 @@ class _VoiceChatPageState extends ConsumerState<VoiceChatPage> with TickerProvid
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Voice AI Assistant', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+            Text('ai.voice_title'.tr(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
             Row(children: [
               Container(
                 width: 8,

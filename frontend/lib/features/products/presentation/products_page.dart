@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -134,7 +135,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: 'Search by name, code, or barcode...',
+                          hintText: 'common.search'.tr(),
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -146,20 +147,20 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                     ElevatedButton.icon(
                       onPressed: _showAddDialog,
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Add Product'),
+                      label: Text('products.add_product'.tr()),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       onPressed: _showAiDialog,
                       icon: const Icon(Icons.smart_toy),
-                      tooltip: 'Ask AI',
+                      tooltip: 'dashboard.ai_insights'.tr(),
                       style: IconButton.styleFrom(backgroundColor: AppColors.primary.withOpacity(0.1)),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       onPressed: () => _showLowStockAlerts(),
                       icon: const Icon(Icons.notifications_outlined),
-                      tooltip: 'Low stock alerts',
+                      tooltip: 'inventory.low_stock_items'.tr(),
                     ),
                   ],
                 ),
@@ -307,7 +308,7 @@ class _ProductCard extends StatelessWidget {
           const SizedBox(width: 16),
           SizedBox(width: 130, child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('\$${product.sellingPrice}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)), const SizedBox(height: 4), Text('Cost: \$${product.purchaseCost} | ${product.profitMargin.toStringAsFixed(0)}%', style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary))])),
           const SizedBox(width: 12),
-          IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: onEdit, tooltip: 'Edit'),
+          IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: onEdit, tooltip: 'common.edit'.tr()),
         ]),
       ),
     );

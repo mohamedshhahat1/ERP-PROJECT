@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -399,7 +400,7 @@ class _LoginSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Welcome Back',
+                  'auth.login_title'.tr(),
                   style: GoogleFonts.spaceGrotesk(
                     color: Colors.white,
                     fontSize: 38,
@@ -408,7 +409,7 @@ class _LoginSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Login to continue to your workspace',
+                  'auth.login_subtitle'.tr(),
                   style: GoogleFonts.inter(
                     color: _C.soft,
                     fontSize: 15,
@@ -423,13 +424,13 @@ class _LoginSection extends StatelessWidget {
                 ],
                 _Input(
                   controller: usernameCtrl,
-                  hint: 'Username',
+                  hint: 'auth.username'.tr(),
                   icon: Icons.person_outline_rounded,
                 ),
                 const SizedBox(height: 18),
                 _Input(
                   controller: passwordCtrl,
-                  hint: 'Password',
+                  hint: 'auth.password'.tr(),
                   icon: Icons.lock_outline_rounded,
                   obscure: obscure,
                   onToggleObscure: onToggleObscure,
@@ -472,7 +473,7 @@ class _LoginSection extends StatelessWidget {
                                   ),
                                 )
                               : Text(
-                                  'Sign In',
+                                  'auth.login_button'.tr(),
                                   style: GoogleFonts.inter(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,

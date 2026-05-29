@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -46,8 +47,8 @@ class SettingsPage extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Settings', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-                  Text('System configuration and information', style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)),
+                  Text('settings.title'.tr(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                  Text('settings.subtitle'.tr(), style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)),
                 ],
               ),
             ],
@@ -64,7 +65,7 @@ class SettingsPage extends ConsumerWidget {
                 isDark: isDark,
                 icon: Icons.info_outline_rounded,
                 iconColor: AppColors.info,
-                title: 'System Info',
+                title: 'settings.system_info'.tr(),
                 child: systemInfoAsync.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.all(16),
@@ -89,7 +90,7 @@ class SettingsPage extends ConsumerWidget {
                 isDark: isDark,
                 icon: Icons.smart_toy_outlined,
                 iconColor: AppColors.primary,
-                title: 'AI Configuration',
+                title: 'settings.ai_config'.tr(),
                 child: Column(
                   children: [
                     _InfoRow(label: 'AI Engine', value: 'GPT-4 / Embeddings', isDark: isDark),
@@ -105,7 +106,7 @@ class SettingsPage extends ConsumerWidget {
                 isDark: isDark,
                 icon: Icons.account_balance_wallet_outlined,
                 iconColor: AppColors.warning,
-                title: 'Opening Balances',
+                title: 'settings.opening_balances_lock'.tr(),
                 child: lockAsync.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.all(16),
@@ -147,7 +148,7 @@ class SettingsPage extends ConsumerWidget {
                 isDark: isDark,
                 icon: Icons.diamond_outlined,
                 iconColor: AppColors.primaryLight,
-                title: 'About',
+                title: 'settings.about'.tr(),
                 child: Column(
                   children: [
                     _InfoRow(label: 'Application', value: 'Ceramic Showroom ERP', isDark: isDark),
@@ -182,7 +183,7 @@ class SettingsPage extends ConsumerWidget {
               : 'Locking will prevent any changes to opening balances until an admin unlocks them.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('common.cancel'.tr())),
           FilledButton(
             onPressed: () async {
               Navigator.pop(ctx);
