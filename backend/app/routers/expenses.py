@@ -12,7 +12,7 @@ from app.core.deps import require_permission, get_current_user
 from app.models.users import User
 from app.models.expenses import Expense, ExpenseCategory
 from app.models.accounting import LedgerEntry
-from app.models.cash import CashTransaction
+from app.models.payments import CashTransaction
 
 router = APIRouter()
 

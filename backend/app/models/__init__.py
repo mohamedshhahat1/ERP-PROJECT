@@ -12,3 +12,5 @@ from app.models.waste import Waste
 from app.models.transfers import WarehouseTransfer
 from app.models.accounting import Account, LedgerEntry, DailyFinancialSummary
 from app.models.users import User, ActivityLog
+from app.models.notifications import Notification
+from app.models.ai import AIEmbedding, AIConversation
