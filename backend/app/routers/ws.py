@@ -2,8 +2,10 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
 from app.core.websocket import get_ws_manager
 from app.core.security import decode_access_token
 import json
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.websocket("/ws/dashboard")
@@ -19,6 +21,10 @@ async def ws_dashboard(websocket: WebSocket, token: str = Query(None)):
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.warning(f"WebSocket dashboard error for user {user_id}: {e}")
+    finally:
         mgr.disconnect(websocket, "dashboard", user_id)
 
 
@@ -35,6 +41,10 @@ async def ws_notifications(websocket: WebSocket, token: str = Query(None)):
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.warning(f"WebSocket notifications error for user {user_id}: {e}")
+    finally:
         mgr.disconnect(websocket, "notifications", user_id)
 
 
@@ -51,6 +61,10 @@ async def ws_inventory(websocket: WebSocket, token: str = Query(None)):
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.warning(f"WebSocket inventory error for user {user_id}: {e}")
+    finally:
         mgr.disconnect(websocket, "inventory", user_id)
 
 
@@ -70,6 +84,10 @@ async def ws_ai_stream(websocket: WebSocket, token: str = Query(None)):
             # Stream AI response back token by token
             await _stream_ai_response(websocket, user_id, message)
     except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.warning(f"WebSocket AI error for user {user_id}: {e}")
+    finally:
         mgr.disconnect(websocket, "ai", user_id)
 
 
