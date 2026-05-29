@@ -1,0 +1,261 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/network/api_client.dart';
+
+final salesRepositoryProvider = Provider<SalesRepository>((ref) {
+  return SalesRepository(ref.read(dioProvider));
+});
+
+class SalesInvoiceModel {
+  final int invoiceId;
+  final int? customerId;
+  final String invoiceNumber;
+  final String invoiceType;
+  final String? invoiceDate;
+  final String totalAmount;
+  final String discountAmount;
+  final String paidAmount;
+  final String remainingAmount;
+  final String paymentStatus;
+  final int warehouseId;
+
+  SalesInvoiceModel({
+    required this.invoiceId,
+    this.customerId,
+    required this.invoiceNumber,
+    required this.invoiceType,
+    this.invoiceDate,
+    required this.totalAmount,
+    required this.discountAmount,
+    required this.paidAmount,
+    required this.remainingAmount,
+    required this.paymentStatus,
+    required this.warehouseId,
+  });
+
+  factory SalesInvoiceModel.fromJson(Map<String, dynamic> json) {
+    return SalesInvoiceModel(
+      invoiceId: json['invoice_id'],
+      customerId: json['customer_id'],
+      invoiceNumber: json['invoice_number'] ?? '',
+      invoiceType: json['invoice_type'] ?? 'cash',
+      invoiceDate: json['invoice_date'],
+      totalAmount: json['total_amount']?.toString() ?? '0',
+      discountAmount: json['discount_amount']?.toString() ?? '0',
+      paidAmount: json['paid_amount']?.toString() ?? '0',
+      remainingAmount: json['remaining_amount']?.toString() ?? '0',
+      paymentStatus: json['payment_status'] ?? 'unpaid',
+      warehouseId: json['warehouse_id'] ?? 1,
+    );
+  }
+
+  double get total => double.tryParse(totalAmount) ?? 0;
+  double get paid => double.tryParse(paidAmount) ?? 0;
+  double get remaining => double.tryParse(remainingAmount) ?? 0;
+  double get discount => double.tryParse(discountAmount) ?? 0;
+
+  bool get isPaid => paymentStatus == 'paid';
+  bool get isPartial => paymentStatus == 'partial';
+  bool get isUnpaid => paymentStatus == 'unpaid';
+  bool get isCash => invoiceType == 'cash';
+  bool get isCredit => invoiceType == 'credit';
+}
+
+class InvoicePaymentModel {
+  final int paymentId;
+  final double amount;
+  final String? paymentDate;
+  final String? notes;
+
+  InvoicePaymentModel({
+    required this.paymentId,
+    required this.amount,
+    this.paymentDate,
+    this.notes,
+  });
+
+  factory InvoicePaymentModel.fromJson(Map<String, dynamic> json) {
+    return InvoicePaymentModel(
+      paymentId: json['payment_id'],
+      amount: double.tryParse(json['payment_amount']?.toString() ?? '0') ?? 0,
+      paymentDate: json['payment_date'],
+      notes: json['notes'],
+    );
+  }
+}
+
+class InvoiceItemModel {
+  final int itemId;
+  final int productId;
+  final String productName;
+  final double soldQuantity;
+  final String unitType;
+  final double unitPrice;
+  final double discount;
+  final double totalPrice;
+  final double returnedQuantity;
+
+  InvoiceItemModel({
+    required this.itemId,
+    required this.productId,
+    required this.productName,
+    required this.soldQuantity,
+    required this.unitType,
+    required this.unitPrice,
+    required this.discount,
+    required this.totalPrice,
+    this.returnedQuantity = 0,
+  });
+
+  factory InvoiceItemModel.fromJson(Map<String, dynamic> json) {
+    return InvoiceItemModel(
+      itemId: json['item_id'] ?? 0,
+      productId: json['product_id'],
+      productName: json['product_name'] ?? 'Unknown Product',
+      soldQuantity: double.tryParse(json['sold_quantity']?.toString() ?? '0') ?? 0,
+      unitType: json['unit_type'] ?? 'meter',
+      unitPrice: double.tryParse(json['unit_price']?.toString() ?? '0') ?? 0,
+      discount: double.tryParse(json['discount']?.toString() ?? '0') ?? 0,
+      totalPrice: double.tryParse(json['total_price']?.toString() ?? '0') ?? 0,
+      returnedQuantity: double.tryParse(json['returned_quantity']?.toString() ?? '0') ?? 0,
+    );
+  }
+
+  double get returnableQuantity => soldQuantity - returnedQuantity;
+}
+
+class SalesItemModel {
+  final int itemId;
+  final int productId;
+  final String soldQuantity;
+  final String unitType;
+  final String unitPrice;
+  final String costAtSale;
+  final String discount;
+  final String totalPrice;
+
+  SalesItemModel({
+    required this.itemId,
+    required this.productId,
+    required this.soldQuantity,
+    required this.unitType,
+    required this.unitPrice,
+    required this.costAtSale,
+    required this.discount,
+    required this.totalPrice,
+  });
+
+  factory SalesItemModel.fromJson(Map<String, dynamic> json) {
+    return SalesItemModel(
+      itemId: json['item_id'] ?? 0,
+      productId: json['product_id'],
+      soldQuantity: json['sold_quantity']?.toString() ?? '0',
+      unitType: json['unit_type'] ?? 'meter',
+      unitPrice: json['unit_price']?.toString() ?? '0',
+      costAtSale: json['cost_at_sale']?.toString() ?? '0',
+      discount: json['discount']?.toString() ?? '0',
+      totalPrice: json['total_price']?.toString() ?? '0',
+    );
+  }
+}
+
+class SalesReturnModel {
+  final int returnId;
+  final int originalInvoiceId;
+  final int? customerId;
+  final String? returnDate;
+  final double returnedAmount;
+  final double refundAmount;
+  final String? notes;
+
+  SalesReturnModel({
+    required this.returnId,
+    required this.originalInvoiceId,
+    this.customerId,
+    this.returnDate,
+    required this.returnedAmount,
+    required this.refundAmount,
+    this.notes,
+  });
+
+  factory SalesReturnModel.fromJson(Map<String, dynamic> json) {
+    return SalesReturnModel(
+      returnId: json['return_id'],
+      originalInvoiceId: json['original_invoice_id'],
+      customerId: json['customer_id'],
+      returnDate: json['return_date'],
+      returnedAmount: double.tryParse(json['returned_amount']?.toString() ?? '0') ?? 0,
+      refundAmount: double.tryParse(json['refund_amount']?.toString() ?? '0') ?? 0,
+      notes: json['notes'],
+    );
+  }
+}
+
+class SalesRepository {
+  final Dio _dio;
+  SalesRepository(this._dio);
+
+  Future<List<SalesInvoiceModel>> getAll() async {
+    final response = await _dio.get('/sales');
+    return (response.data as List).map((e) => SalesInvoiceModel.fromJson(e)).toList();
+  }
+
+  Future<SalesInvoiceModel> getById(int id) async {
+    final response = await _dio.get('/sales/$id');
+    return SalesInvoiceModel.fromJson(response.data);
+  }
+
+  Future<SalesInvoiceModel> create(Map<String, dynamic> data) async {
+    final response = await _dio.post('/sales', data: data);
+    return SalesInvoiceModel.fromJson(response.data);
+  }
+
+  Future<SalesInvoiceModel> update(int invoiceId, Map<String, dynamic> data) async {
+    final response = await _dio.put('/sales/$invoiceId', data: data);
+    return SalesInvoiceModel.fromJson(response.data);
+  }
+
+  Future<void> cancelInvoice(int invoiceId, {String? reason}) async {
+    await _dio.post('/sales/$invoiceId/cancel', data: {
+      if (reason != null) 'reason': reason,
+    });
+  }
+
+  Future<List<InvoicePaymentModel>> getInvoicePayments(int invoiceId) async {
+    final response = await _dio.get('/sales/$invoiceId/payments');
+    return (response.data as List).map((e) => InvoicePaymentModel.fromJson(e)).toList();
+  }
+
+  Future<List<InvoiceItemModel>> getInvoiceItems(int invoiceId) async {
+    final response = await _dio.get('/sales/$invoiceId/items');
+    return (response.data as List).map((e) => InvoiceItemModel.fromJson(e)).toList();
+  }
+
+  Future<void> recordPayment({required int customerId, int? invoiceId, required double amount, String? notes}) async {
+    await _dio.post('/payments/customers', data: {
+      'customer_id': customerId,
+      'related_invoice_id': invoiceId,
+      'payment_amount': amount,
+      'notes': notes,
+    });
+  }
+
+  Future<SalesReturnModel> createReturn(int invoiceId, {required List<Map<String, dynamic>> items, double refundAmount = 0, String? notes}) async {
+    final response = await _dio.post('/sales/$invoiceId/returns', data: {
+      'items': items,
+      'refund_amount': refundAmount,
+      'notes': notes,
+    });
+    return SalesReturnModel.fromJson(response.data);
+  }
+
+  Future<List<SalesReturnModel>> getReturns(int invoiceId) async {
+    final response = await _dio.get('/sales/$invoiceId/returns');
+    return (response.data as List).map((e) => SalesReturnModel.fromJson(e)).toList();
+  }
+
+  Future<String> aiChat(String message) async {
+    final response = await _dio.post('/ai/chat', data: {'message': message});
+    return response.data['response'] ?? response.data['message'] ?? 'No response';
+  }
+}

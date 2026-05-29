@@ -1,0 +1,101 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from datetime import datetime
+from app.database import get_db
+from app.models.users import User
+from app.core.security import verify_password, hash_password, create_access_token
+from app.core.deps import get_current_user
+from app.core.redis import get_redis
+from app.services.cache_service import CacheService
+from app.schemas.users import LoginRequest, TokenResponse, ChangePasswordRequest, UserCreate, UserResponse
+
+router = APIRouter()
+
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def register(data: UserCreate, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.username == data.username).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists",
+        )
+    if data.role not in ("admin", "cashier", "warehouse_employee", "accountant"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid role. Must be: admin, cashier, warehouse_employee, or accountant",
+        )
+    user = User(
+        full_name=data.full_name,
+        username=data.username,
+        password=hash_password(data.password),
+        role=data.role,
+        active_status=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.post("/login", response_model=TokenResponse)
+def login(data: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == data.username).first()
+
+    if not user or not verify_password(data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="We couldn't sign you in with those credentials.",
+        )
+
+    if not user.active_status:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated. Please contact support.",
+        )
+    user.last_login = datetime.utcnow()
+    db.commit()
+
+    token = create_access_token({"sub": str(user.user_id), "role": user.role})
+
+    cache = CacheService(get_redis())
+    cache.set_session(user.user_id, {
+        "user_id": user.user_id,
+        "username": user.username,
+        "role": user.role,
+        "full_name": user.full_name,
+        "login_time": datetime.utcnow().isoformat(),
+    })
+
+    return TokenResponse(
+        access_token=token,
+        user_id=user.user_id,
+        full_name=user.full_name,
+        role=user.role,
+    )
+
+
+@router.get("/me", response_model=TokenResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    return TokenResponse(
+        access_token="",
+        user_id=current_user.user_id,
+        full_name=current_user.full_name,
+        role=current_user.role,
+    )
+
+
+@router.post("/change-password")
+def change_password(data: ChangePasswordRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not verify_password(data.current_password, current_user.password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    current_user.password = hash_password(data.new_password)
+    db.commit()
+    return {"detail": "Password changed successfully"}
+
+
+@router.post("/logout")
+def logout(current_user: User = Depends(get_current_user)):
+    cache = CacheService(get_redis())
+    cache.invalidate_session(current_user.user_id)
+    return {"detail": "Logged out successfully"}
