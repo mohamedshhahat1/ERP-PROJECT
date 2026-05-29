@@ -580,7 +580,7 @@ CREATE TABLE users (
     full_name VARCHAR(200) NOT NULL,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(30) NOT NULL CHECK (role IN ('admin', 'cashier', 'warehouse_employee', 'accountant')),
+    role VARCHAR(30) NOT NULL CHECK (role IN ('admin', 'manager', 'cashier', 'warehouse_employee', 'accountant')),
     active_status BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMP
 );

@@ -12,6 +12,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./database/ai_schema.sql:/docker-entrypoint-initdb.d/02-ai-schema.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/03-seed-data.sql
+      - ./database/fix_schema_constraints.sql:/docker-entrypoint-initdb.d/04-constraints.sql
     networks:
       - backend_net
     deploy:
