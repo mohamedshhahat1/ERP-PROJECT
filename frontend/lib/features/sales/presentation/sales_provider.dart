@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../customers/data/customers_repository.dart';
+import '../../customers/presentation/customers_provider.dart';
 import '../../products/data/products_repository.dart';
 import '../data/sales_repository.dart';
 
@@ -133,11 +134,6 @@ class SalesKpis {
     paidCount: 0, partialCount: 0, unpaidCount: 0,
   );
 }
-
-final customersProvider = FutureProvider<List<CustomerModel>>((ref) async {
-  final repo = ref.read(customersRepositoryProvider);
-  return repo.getAll();
-});
 
 final productsListProvider = FutureProvider<List<ProductModel>>((ref) async {
   final repo = ref.read(productsRepositoryProvider);

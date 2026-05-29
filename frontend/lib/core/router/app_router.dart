@@ -21,12 +21,25 @@ import '../../features/ai_audit/presentation/ai_analytics_page.dart';
 import '../../features/whatsapp/presentation/whatsapp_page.dart';
 import '../../shared/layouts/app_shell.dart';
 
+/// A ChangeNotifier that listens to auth state changes and notifies GoRouter
+/// to re-evaluate its redirect logic WITHOUT recreating the router instance.
+class _AuthNotifier extends ChangeNotifier {
+  _AuthNotifier(this._ref) {
+    _ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+  final Ref _ref;
+}
+
+final _authNotifierProvider = Provider<_AuthNotifier>((ref) => _AuthNotifier(ref));
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final authNotifier = ref.read(_authNotifierProvider);
 
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: authNotifier,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isLoggedIn = authState.status == AuthStatus.authenticated;
       final isLoginRoute = state.uri.path == '/login';
 
