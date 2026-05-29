@@ -20,7 +20,7 @@ async def extract_invoice_from_image(
     current_user: User = Depends(require_permission("sales:write")),
     db: Session = Depends(get_db),
 ):
-    """Full pipeline: Image → PaddleOCR → Claude AI → Product Matching → Invoice Data"""
+    """Full pipeline: Image → Duplicate Check → PaddleOCR → Claude AI → Quantity Normalization → Product Matching → Semantic Matching → Invoice Data"""
     # Validate file
     image_data = await file.read()
     if len(image_data) > 20 * 1024 * 1024:
@@ -33,6 +33,15 @@ async def extract_invoice_from_image(
     # Run pipeline
     pipeline = InvoiceAIPipeline(db)
     result = pipeline.process_image(image_data)
+
+    # If duplicate detected, return 409 Conflict with details
+    if result.get("status") == "duplicate":
+        return {
+            "status": "duplicate",
+            "duplicate_check": result.get("duplicate_check"),
+            "pipeline": result.get("pipeline"),
+            "message": result.get("error", "Duplicate invoice detected"),
+        }
 
     return result
 

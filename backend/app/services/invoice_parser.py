@@ -28,12 +28,19 @@ Return ONLY a valid JSON object with this structure:
 {{
   "customer_name": "extracted customer name or null",
   "customer_phone": "phone number if visible or null",
+  "invoice_number": "extracted invoice number or null",
+  "date": "extracted date in YYYY-MM-DD format or null",
+  "subtotal": 0.0,
+  "tax": 0.0,
+  "total_amount": 0.0,
+  "supplier_name": "if this is a purchase invoice, supplier name or null",
   "items": [
     {{
       "product_name": "product description",
       "quantity": 10.0,
       "unit_type": "meter|piece|carton",
       "unit_price": 150.0,
+      "confidence": 0.95,
       "notes": "any notes for this item or null"
     }}
   ],
@@ -51,6 +58,12 @@ Rules:
 - unit_type: "meter" for متر/م, "piece" for قطعة/ق, "carton" for كرتونة/كرتون
 - If a line looks like a total/subtotal, don't include it as an item
 - Set confidence based on OCR text clarity
+- Add a confidence score (0.0-1.0) for each item based on how clearly you could read it
+- Look for totals/subtotals (إجمالي, مجموع, total) — extract as total_amount, not as line items
+- Look for tax amounts (ضريبة, VAT, tax)
+- Look for invoice/order numbers (رقم الفاتورة, #, No.)
+- Look for dates in any format and convert to YYYY-MM-DD
+- If it looks like a supplier/purchase invoice (has supplier name), set supplier_name
 """
 
 
