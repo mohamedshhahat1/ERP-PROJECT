@@ -440,7 +440,7 @@ CREATE TABLE expenses (
     receipt_number VARCHAR(50),
     expense_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
-    created_by INTEGER REFERENCES users(user_id)
+    created_by INTEGER
 );
 
 -- 22. Waste
