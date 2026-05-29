@@ -95,6 +95,7 @@ class SalesService:
                 cogs=sum(item.sold_quantity * item.cost_at_sale for item in data.items),
                 cash_received=data.paid_amount,
                 is_credit=(data.invoice_type in ("credit", "mixed")),
+                discount_amount=data.discount_amount,
             )
 
             if data.invoice_type in ("credit", "mixed") and data.customer_id and remaining > 0:

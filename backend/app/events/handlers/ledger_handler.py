@@ -17,6 +17,7 @@ def handle_sale_ledger(event: Event, db: Session):
         cogs=cogs,
         cash_received=Decimal(str(data["paid_amount"])),
         is_credit=(data["invoice_type"] == "credit"),
+        discount_amount=Decimal(str(data.get("discount_amount", "0"))),
     )
 
 

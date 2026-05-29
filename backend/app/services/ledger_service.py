@@ -15,6 +15,11 @@ ACCOUNT_CODES = {
     "operating_expenses": 10,
 }
 
+# Sales discount is a contra-revenue account. If not yet in the chart of accounts,
+# it shares the revenue account and is tracked via description.
+# To add a dedicated account, add "sales_discount": 11 and create the row in `accounts`.
+SALES_DISCOUNT_ACCOUNT = ACCOUNT_CODES["sales_revenue"]
+
 
 class LedgerService:
     def __init__(self, db: Session):
@@ -33,9 +38,22 @@ class LedgerService:
         self.db.add(entry)
 
     def record_sale(self, invoice_id: int, total_amount: Decimal, cogs: Decimal,
-                    cash_received: Decimal, is_credit: bool):
+                    cash_received: Decimal, is_credit: bool,
+                    discount_amount: Decimal = Decimal("0")):
+        """Record ledger entries for a sale, properly accounting for discounts.
+
+        Accounting logic:
+          Dr Cash            = cash_received
+          Dr Accounts Recv.  = net_amount - cash_received (if credit)
+          Dr Sales Discount  = discount_amount (contra-revenue)
+            Cr Sales Revenue = total_amount (gross)
+          Dr COGS            = cogs
+            Cr Inventory     = cogs
+        """
+        net_amount = total_amount - discount_amount
+
         if is_credit:
-            receivable = total_amount - cash_received
+            receivable = net_amount - cash_received
             if cash_received > 0:
                 self._entry(ACCOUNT_CODES["cash"], debit=cash_received, credit=Decimal("0"),
                             entity_type="sales_invoice", entity_id=invoice_id, description="Cash from sale")
@@ -43,12 +61,20 @@ class LedgerService:
                 self._entry(ACCOUNT_CODES["accounts_receivable"], debit=receivable, credit=Decimal("0"),
                             entity_type="sales_invoice", entity_id=invoice_id, description="Credit sale receivable")
         else:
-            self._entry(ACCOUNT_CODES["cash"], debit=total_amount, credit=Decimal("0"),
+            # Cash sale: debit net amount (what was actually received)
+            self._entry(ACCOUNT_CODES["cash"], debit=net_amount, credit=Decimal("0"),
                         entity_type="sales_invoice", entity_id=invoice_id, description="Cash sale")
 
+        # Record discount as contra-revenue (debit reduces net revenue)
+        if discount_amount > 0:
+            self._entry(SALES_DISCOUNT_ACCOUNT, debit=discount_amount, credit=Decimal("0"),
+                        entity_type="sales_invoice", entity_id=invoice_id, description="Sales discount")
+
+        # Revenue is recorded at gross amount; discount entry above offsets it
         self._entry(ACCOUNT_CODES["sales_revenue"], debit=Decimal("0"), credit=total_amount,
                     entity_type="sales_invoice", entity_id=invoice_id, description="Sales revenue")
 
+        # COGS and inventory reduction
         self._entry(ACCOUNT_CODES["cogs"], debit=cogs, credit=Decimal("0"),
                     entity_type="sales_invoice", entity_id=invoice_id, description="Cost of goods sold")
 
