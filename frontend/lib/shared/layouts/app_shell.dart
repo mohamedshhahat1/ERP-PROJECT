@@ -52,6 +52,7 @@ class AppShell extends ConsumerWidget {
                       _navItem(context, ref, '/products', Icons.inventory_2_rounded, 'Products', collapsed),
                       _navItem(context, ref, '/inventory', Icons.warehouse_rounded, 'Inventory', collapsed),
                       _navItem(context, ref, '/sales', Icons.receipt_long_rounded, 'Sales', collapsed),
+                      _navItem(context, ref, '/smart-invoice', Icons.document_scanner_rounded, 'Smart Invoice', collapsed, highlight: true),
                       _navItem(context, ref, '/purchases', Icons.shopping_cart_rounded, 'Purchases', collapsed),
                       _navItem(context, ref, '/expenses', Icons.money_off_rounded, 'Expenses', collapsed),
                       _navItem(context, ref, '/customers', Icons.people_rounded, 'Customers', collapsed),

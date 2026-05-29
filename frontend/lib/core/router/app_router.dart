@@ -22,6 +22,7 @@ import '../../features/whatsapp/presentation/whatsapp_page.dart';
 import '../../features/users/presentation/users_page.dart';
 import '../../features/accounting/presentation/accounting_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
+import '../../features/smart_invoice/presentation/smart_invoice_page.dart';
 import '../../shared/layouts/app_shell.dart';
 
 /// A ChangeNotifier that listens to auth state changes and notifies GoRouter
@@ -60,6 +61,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/customers', builder: (_, __) => const CustomersPage()),
           GoRoute(path: '/suppliers', builder: (_, __) => const SuppliersPage()),
           GoRoute(path: '/sales', builder: (_, __) => const SalesPage()),
+          GoRoute(path: '/smart-invoice', builder: (_, __) => const SmartInvoicePage()),
           GoRoute(path: '/purchases', builder: (_, __) => const PurchasesPage()),
           GoRoute(path: '/inventory', builder: (_, __) => const InventoryPage()),
           GoRoute(path: '/expenses', builder: (_, __) => const ExpensesPage()),
