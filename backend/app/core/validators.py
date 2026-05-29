@@ -1,5 +1,6 @@
 from decimal import Decimal
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from app.models.products import Product, ProductUnitConversion
 from app.models.inventory import InventoryCache
 from app.models.customers import Customer
@@ -19,10 +20,21 @@ class Validator:
         return product
 
     def validate_stock_available(self, product_id: int, warehouse_id: int, quantity: Decimal):
-        cache = self.db.query(InventoryCache).filter(
-            InventoryCache.product_id == product_id,
-            InventoryCache.warehouse_id == warehouse_id,
-        ).first()
+        """Validate stock with SELECT FOR UPDATE to prevent race conditions.
+
+        This acquires a row-level lock on the InventoryCache row, ensuring
+        concurrent transactions cannot both pass validation on the same stock.
+        The lock is held until the enclosing transaction commits or rolls back.
+        """
+        cache = (
+            self.db.query(InventoryCache)
+            .filter(
+                InventoryCache.product_id == product_id,
+                InventoryCache.warehouse_id == warehouse_id,
+            )
+            .with_for_update()
+            .first()
+        )
         available = cache.cached_quantity if cache else Decimal("0")
         if available < quantity:
             raise ValidationError(
@@ -31,10 +43,16 @@ class Validator:
             )
 
     def validate_stock_not_negative(self, product_id: int, warehouse_id: int, deduction: Decimal):
-        cache = self.db.query(InventoryCache).filter(
-            InventoryCache.product_id == product_id,
-            InventoryCache.warehouse_id == warehouse_id,
-        ).first()
+        """Validate with lock that deduction won't cause negative stock."""
+        cache = (
+            self.db.query(InventoryCache)
+            .filter(
+                InventoryCache.product_id == product_id,
+                InventoryCache.warehouse_id == warehouse_id,
+            )
+            .with_for_update()
+            .first()
+        )
         available = cache.cached_quantity if cache else Decimal("0")
         if (available - deduction) < 0:
             raise ValidationError(

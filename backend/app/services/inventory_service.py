@@ -60,6 +60,8 @@ class InventoryService:
             reference_type="sales_invoice",
             reference_id=reference_id,
         )
+        # Atomically decrement cached quantity to prevent overselling
+        self._update_cache_quantity(product_id, warehouse_id, -quantity)
         self.cache.invalidate_stock(product_id, warehouse_id)
 
     def record_purchase(self, product_id: int, warehouse_id: int, quantity: Decimal,
@@ -75,6 +77,8 @@ class InventoryService:
             reference_type="purchase_invoice",
             reference_id=reference_id,
         )
+        # Atomically increment cached quantity
+        self._update_cache_quantity(product_id, warehouse_id, quantity)
         self.cache.invalidate_stock(product_id, warehouse_id)
 
     def record_purchase_return(self, product_id: int, warehouse_id: int, quantity: Decimal,
@@ -90,6 +94,8 @@ class InventoryService:
             reference_type="purchase_return",
             reference_id=reference_id,
         )
+        # Atomically decrement cached quantity
+        self._update_cache_quantity(product_id, warehouse_id, -quantity)
         self.cache.invalidate_stock(product_id, warehouse_id)
 
     def record_opening_stock(self, product_id: int, warehouse_id: int, quantity: Decimal,
@@ -118,6 +124,8 @@ class InventoryService:
             reference_type="waste",
             reference_id=reference_id,
         )
+        # Atomically decrement cached quantity
+        self._update_cache_quantity(product_id, warehouse_id, -quantity)
         self.cache.invalidate_stock(product_id, warehouse_id)
 
     def record_return(self, product_id: int, warehouse_id: int, quantity: Decimal,
@@ -133,8 +141,40 @@ class InventoryService:
             reference_type="sales_return",
             reference_id=reference_id,
         )
+        # Atomically increment cached quantity (stock returned)
+        self._update_cache_quantity(product_id, warehouse_id, quantity)
         self.cache.invalidate_stock(product_id, warehouse_id)
 
     def refresh_cache(self):
         self.repo.refresh_cache()
         self.cache.invalidate_all_stock()
+
+    def _update_cache_quantity(self, product_id: int, warehouse_id: int, delta: Decimal):
+        """Atomically update InventoryCache.cached_quantity within the current transaction.
+
+        This ensures the DB-level cache row reflects the stock change immediately,
+        so any concurrent transaction that acquires a FOR UPDATE lock on the same row
+        will see the updated quantity. This prevents double-selling.
+        """
+        cache_row = (
+            self.db.query(InventoryCache)
+            .filter(
+                InventoryCache.product_id == product_id,
+                InventoryCache.warehouse_id == warehouse_id,
+            )
+            .with_for_update()
+            .first()
+        )
+        if cache_row:
+            cache_row.cached_quantity += delta
+            self.db.flush()
+        else:
+            # No cache row exists yet — create one (e.g., first purchase)
+            new_cache = InventoryCache(
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                cached_quantity=max(delta, Decimal("0")),
+                cached_avg_cost=Decimal("0"),
+            )
+            self.db.add(new_cache)
+            self.db.flush()
