@@ -227,7 +227,12 @@ class AppShell extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => context.go(path),
+          onTap: isActive ? null : () {
+            // Use Router.neglect to prevent browser history buildup on sidebar navigation
+            Router.neglect(context, () {
+              GoRouter.of(context).go(path);
+            });
+          },
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: collapsed ? 16 : 12, vertical: 10),
             child: Row(
