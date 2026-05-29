@@ -35,65 +35,76 @@ class DashboardPage extends ConsumerWidget {
 
           // KPI Cards
           summaryAsync.when(
-            loading: () => GridView.count(
-              crossAxisCount: 5, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1.6,
-              children: List.generate(5, (_) => const CardSkeletonLoader()),
-            ),
+            loading: () => LayoutBuilder(builder: (context, constraints) {
+              final cols = constraints.maxWidth > 1000 ? 5 : constraints.maxWidth > 600 ? 3 : 2;
+              return GridView.count(
+                crossAxisCount: cols, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1.6,
+                children: List.generate(5, (_) => const CardSkeletonLoader()),
+              );
+            }),
             error: (err, _) => Text('Error: $err'),
-            data: (s) => GridView.count(
-              crossAxisCount: 5, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1.6,
-              children: [
-                KPICard(title: 'Today\'s Sales', value: '\$${s.todaySales}', icon: Icons.trending_up, color: AppColors.success),
-                KPICard(title: 'Monthly Profit', value: '\$${s.monthlyProfit}', icon: Icons.bar_chart, color: AppColors.primary),
-                KPICard(title: 'Low Stock', value: '${s.lowStockProducts}', icon: Icons.warning_rounded, color: AppColors.warning),
-                KPICard(title: 'Pending Payments', value: '${s.pendingPayments}', icon: Icons.schedule, color: AppColors.error),
-                KPICard(title: 'Cash Balance', value: '\$${s.cashBalance}', icon: Icons.account_balance_wallet, color: AppColors.info),
-              ],
-            ),
+            data: (s) => LayoutBuilder(builder: (context, constraints) {
+              final cols = constraints.maxWidth > 1000 ? 5 : constraints.maxWidth > 600 ? 3 : 2;
+              return GridView.count(
+                crossAxisCount: cols, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1.6,
+                children: [
+                  KPICard(title: 'Today\'s Sales', value: '\$${s.todaySales}', icon: Icons.trending_up, color: AppColors.success),
+                  KPICard(title: 'Monthly Profit', value: '\$${s.monthlyProfit}', icon: Icons.bar_chart, color: AppColors.primary),
+                  KPICard(title: 'Low Stock', value: '${s.lowStockProducts}', icon: Icons.warning_rounded, color: AppColors.warning),
+                  KPICard(title: 'Pending Payments', value: '${s.pendingPayments}', icon: Icons.schedule, color: AppColors.error),
+                  KPICard(title: 'Cash Balance', value: '\$${s.cashBalance}', icon: Icons.account_balance_wallet, color: AppColors.info),
+                ],
+              );
+            }),
           ),
           const SizedBox(height: 24),
 
           // Revenue Chart + AI Insights
-          SizedBox(
-            height: 320,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkSurface : AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
-                    ),
-                    child: salesAsync.when(
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Center(child: Text('$e')),
-                      data: (data) => RevenueChart(data: data),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkSurface : AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
-                    ),
-                    child: insightsAsync.when(
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (_, __) => const AIInsightsWidget(insights: []),
-                      data: (insights) => AIInsightsWidget(insights: insights),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          LayoutBuilder(builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 800;
+            final chartWidget = Container(
+              height: 320,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+              ),
+              child: salesAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('$e')),
+                data: (data) => RevenueChart(data: data),
+              ),
+            );
+            final insightsWidget = Container(
+              height: 320,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+              ),
+              child: insightsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (_, __) => const AIInsightsWidget(insights: []),
+                data: (insights) => AIInsightsWidget(insights: insights),
+              ),
+            );
+
+            if (isNarrow) {
+              return Column(children: [chartWidget, const SizedBox(height: 16), insightsWidget]);
+            }
+            return SizedBox(
+              height: 320,
+              child: Row(
+                children: [
+                  Expanded(flex: 3, child: chartWidget),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 2, child: insightsWidget),
+                ],
+              ),
+            );
+          }),
           const SizedBox(height: 16),
 
           // Profit Chart + Top Products

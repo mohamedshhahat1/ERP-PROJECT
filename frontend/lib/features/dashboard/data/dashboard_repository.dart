@@ -27,16 +27,16 @@ class DashboardSummary {
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
     return DashboardSummary(
-      todaySales: json['today_sales'] ?? '0',
-      todayPurchases: json['today_purchases'] ?? '0',
-      todayExpenses: json['today_expenses'] ?? '0',
-      monthlyRevenue: json['monthly_revenue'] ?? '0',
-      monthlyProfit: json['monthly_profit'] ?? '0',
-      lowStockProducts: json['low_stock_products'] ?? 0,
-      pendingPayments: json['pending_payments'] ?? 0,
-      cashBalance: json['cash_balance'] ?? '0',
-      totalReceivables: json['total_receivables'] ?? '0',
-      totalPayables: json['total_payables'] ?? '0',
+      todaySales: (json['today_sales'] ?? 0).toString(),
+      todayPurchases: (json['today_purchases'] ?? 0).toString(),
+      todayExpenses: (json['today_expenses'] ?? 0).toString(),
+      monthlyRevenue: (json['monthly_revenue'] ?? 0).toString(),
+      monthlyProfit: (json['monthly_profit'] ?? 0).toString(),
+      lowStockProducts: (json['low_stock_products'] is int) ? json['low_stock_products'] : int.tryParse(json['low_stock_products']?.toString() ?? '0') ?? 0,
+      pendingPayments: (json['pending_payments'] is int) ? json['pending_payments'] : int.tryParse(json['pending_payments']?.toString() ?? '0') ?? 0,
+      cashBalance: (json['cash_balance'] ?? 0).toString(),
+      totalReceivables: (json['total_receivables'] ?? 0).toString(),
+      totalPayables: (json['total_payables'] ?? 0).toString(),
     );
   }
 }

@@ -55,12 +55,22 @@ class AIRepository {
       buffer += utf8.decode(chunk);
       while (buffer.contains('\n')) {
         final idx = buffer.indexOf('\n');
-        final line = buffer.substring(0, idx).trim();
+        var line = buffer.substring(0, idx).trim();
         buffer = buffer.substring(idx + 1);
-        if (line.isNotEmpty) {
-          try {
-            yield jsonDecode(line) as Map<String, dynamic>;
-          } catch (_) {}
+
+        if (line.isEmpty) continue;
+
+        // Handle Server-Sent Events (SSE) format: "data: {...}"
+        if (line.startsWith('data:')) {
+          line = line.substring(5).trim();
+        }
+        // Skip SSE comments and control lines
+        if (line.startsWith(':') || line.isEmpty) continue;
+
+        try {
+          yield jsonDecode(line) as Map<String, dynamic>;
+        } catch (_) {
+          // Skip malformed JSON lines
         }
       }
     }
